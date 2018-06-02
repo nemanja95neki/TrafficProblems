@@ -1,0 +1,59 @@
+{
+  "project_info": {
+    "project_number": "874599724079",
+    "firebase_url": "https://trafficproblems-d24c5.firebaseio.com",
+    "project_id": "trafficproblems-d24c5",
+    "storage_bucket": "trafficproblems-d24c5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:874599724079:android:c9c91032d6453806",
+        "android_client_info": {
+          "package_name": "com.elfak.nv.trafficproblems"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "874599724079-u1fiqo805v57rlsciranlolfahtrasri.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.elfak.nv.trafficproblems",
+            "certificate_hash": "e1091dbc6624ae0771e27da19d4c52e53036fd67"
+          }
+        },
+        {
+          "client_id": "874599724079-erje2v52c6s29h05rs7lqq1q2lk65pnu.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "874599724079-erje2v52c6s29h05rs7lqq1q2lk65pnu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCLodbxM8JiSChGcnFZrIQxficrh9uGzwg"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "874599724079-erje2v52c6s29h05rs7lqq1q2lk65pnu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
