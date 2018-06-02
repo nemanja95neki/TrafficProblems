@@ -10,7 +10,7 @@
     tools:showIn="@layout/activity_sign_in">
 
     <Button
-        android:id="@+id/login2"
+        android:id="@+id/btnSignUp"
         android:layout_width="268dp"
         android:layout_height="53dp"
         android:layout_marginBottom="52dp"
@@ -18,11 +18,11 @@
         android:text="@string/signup"
         android:textAllCaps="false"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/editText5"
-        app:layout_constraintStart_toStartOf="@+id/editText5" />
+        app:layout_constraintEnd_toEndOf="@+id/txtPhone"
+        app:layout_constraintStart_toStartOf="@+id/txtPhone" />
 
     <EditText
-        android:id="@+id/editText"
+        android:id="@+id/txtName"
         android:layout_width="248dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="11dp"
@@ -31,20 +31,20 @@
         android:layout_marginRight="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
+        android:backgroundTint="@color/buttonColor"
         android:ems="10"
         android:hint="Name"
         android:inputType="textPersonName"
-        android:backgroundTint="@color/buttonColor"
-        app:layout_constraintBottom_toTopOf="@+id/editText2"
+        android:textColor="@color/buttonColor"
+        android:textColorHint="@color/buttonColor"
+        app:layout_constraintBottom_toTopOf="@+id/txtLastName"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0"
-        android:textColorHint="@color/buttonColor"
-        android:textColor="@color/buttonColor"/>
+        app:layout_constraintVertical_bias="0.0" />
 
     <EditText
-        android:id="@+id/editText2"
+        android:id="@+id/txtLastName"
         android:layout_width="248dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
@@ -55,16 +55,16 @@
         android:ems="10"
         android:hint="Last name"
         android:inputType="textPersonName"
-        app:layout_constraintBottom_toTopOf="@+id/editText3"
-        app:layout_constraintEnd_toEndOf="@+id/editText"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="@+id/editText"
-        app:layout_constraintTop_toBottomOf="@+id/editText"
+        android:textColor="@color/buttonColor"
         android:textColorHint="@color/buttonColor"
-        android:textColor="@color/buttonColor"/>
+        app:layout_constraintBottom_toTopOf="@+id/txtEmail"
+        app:layout_constraintEnd_toEndOf="@+id/txtName"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="@+id/txtName"
+        app:layout_constraintTop_toBottomOf="@+id/txtName" />
 
     <EditText
-        android:id="@+id/editText3"
+        android:id="@+id/txtEmail"
         android:layout_width="248dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="10dp"
@@ -75,15 +75,15 @@
         android:ems="10"
         android:hint="Email"
         android:inputType="textEmailAddress"
-        app:layout_constraintBottom_toTopOf="@+id/editText4"
-        app:layout_constraintEnd_toEndOf="@+id/editText2"
-        app:layout_constraintStart_toStartOf="@+id/editText2"
-        app:layout_constraintTop_toBottomOf="@+id/editText2"
+        android:textColor="@color/buttonColor"
         android:textColorHint="@color/buttonColor"
-        android:textColor="@color/buttonColor"/>
+        app:layout_constraintBottom_toTopOf="@+id/txtPassword"
+        app:layout_constraintEnd_toEndOf="@+id/txtLastName"
+        app:layout_constraintStart_toStartOf="@+id/txtLastName"
+        app:layout_constraintTop_toBottomOf="@+id/txtLastName" />
 
     <EditText
-        android:id="@+id/editText4"
+        android:id="@+id/txtPassword"
         android:layout_width="248dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="9dp"
@@ -93,17 +93,17 @@
         android:backgroundTint="@color/buttonColor"
         android:ems="10"
         android:hint="Password"
-        android:textColorHint="@color/buttonColor"
-        android:textColor="@color/buttonColor"
         android:inputType="textPassword"
-        app:layout_constraintBottom_toTopOf="@+id/editText5"
-        app:layout_constraintEnd_toEndOf="@+id/editText3"
+        android:textColor="@color/buttonColor"
+        android:textColorHint="@color/buttonColor"
+        app:layout_constraintBottom_toTopOf="@+id/txtPhone"
+        app:layout_constraintEnd_toEndOf="@+id/txtEmail"
         app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="@+id/editText3"
-        app:layout_constraintTop_toBottomOf="@+id/editText3" />
+        app:layout_constraintStart_toStartOf="@+id/txtEmail"
+        app:layout_constraintTop_toBottomOf="@+id/txtEmail" />
 
     <EditText
-        android:id="@+id/editText5"
+        android:id="@+id/txtPhone"
         android:layout_width="248dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="31dp"
@@ -114,11 +114,27 @@
         android:ems="10"
         android:hint="Phone number"
         android:inputType="phone"
-        app:layout_constraintBottom_toTopOf="@+id/login2"
-        app:layout_constraintEnd_toEndOf="@+id/editText4"
-        app:layout_constraintHorizontal_bias="0.619"
-        app:layout_constraintStart_toStartOf="@+id/editText4"
-        app:layout_constraintTop_toBottomOf="@+id/editText4"
+        android:textColor="@color/buttonColor"
         android:textColorHint="@color/buttonColor"
-        android:textColor="@color/buttonColor"/>
+        app:layout_constraintBottom_toTopOf="@+id/btnSignUp"
+        app:layout_constraintEnd_toEndOf="@+id/txtPassword"
+        app:layout_constraintHorizontal_bias="0.619"
+        app:layout_constraintStart_toStartOf="@+id/txtPassword"
+        app:layout_constraintTop_toBottomOf="@+id/txtPassword" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 </android.support.constraint.ConstraintLayout>
