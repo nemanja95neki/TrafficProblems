@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "874599724079-smqa5hk5q48al5tnasspb9anlsf59hjr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.elfak.nv.trafficproblems",
+            "certificate_hash": "e67cbeffd36fad6fdbb522ed01ac17e8823812c5"
+          }
+        },
+        {
           "client_id": "874599724079-u1fiqo805v57rlsciranlolfahtrasri.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
