@@ -50,6 +50,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 if (firebaseAuth.getCurrentUser() != null) {
+<<<<<<< HEAD
                     userID = firebaseAuth.getCurrentUser().getUid();
                     databaseReference = FirebaseDatabase.getInstance().getReference();
 
@@ -71,6 +72,12 @@ public class LoginActivity extends AppCompatActivity {
                     });
 
                     //Toast.makeText(LoginActivity.this,"COOL!",Toast.LENGTH_LONG).show();
+=======
+                    //Intent loggedIn = new Intent(LoginActivity.class, Main.class);
+                    //startActivity(loggedIn);
+                    Intent i = new Intent(LoginActivity.this, NavDrawerMain.class);
+                    startActivity(i);
+>>>>>>> 6f59b6dee6c2f4c577a795bc5b8427372d0f6dec
                 }
             }
 

@@ -4,5 +4,9 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
     <color name="buttonColor">#ffffff</color>
+<<<<<<< HEAD
     <color name="white">#ffffff</color>
+=======
+    <color name="sideMenu">#84b4eb</color>
+>>>>>>> 6f59b6dee6c2f4c577a795bc5b8427372d0f6dec
 </resources>
