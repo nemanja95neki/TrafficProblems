@@ -44,7 +44,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.elfak.nv.trafficproblems.MainActivity" />
         </activity>
-<<<<<<< HEAD
         <activity
             android:name=".Profile"
             android:label="@string/title_activity_profile"
@@ -54,12 +53,11 @@
             android:label="@string/title_activity_edit_profile"
             android:parentActivityName=".Profile"
             android:theme="@style/AppTheme.NoActionBar">
+        </activity>
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.elfak.nv.trafficproblems.Profile" />
-=======
-
-        <!--
+<!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
              Note that the API key is linked to the encryption key used to sign the APK.
@@ -83,7 +81,6 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.elfak.nv.trafficproblems.NavDrawerMain" />
->>>>>>> 6f59b6dee6c2f4c577a795bc5b8427372d0f6dec
         </activity>
     </application>
 
