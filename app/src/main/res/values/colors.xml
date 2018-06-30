@@ -4,4 +4,5 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
     <color name="buttonColor">#ffffff</color>
+    <color name="sideMenu">#84b4eb</color>
 </resources>

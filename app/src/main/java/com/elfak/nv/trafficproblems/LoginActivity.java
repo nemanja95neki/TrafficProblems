@@ -1,5 +1,6 @@
 package com.elfak.nv.trafficproblems;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -40,8 +41,8 @@ public class LoginActivity extends AppCompatActivity {
                 if (firebaseAuth.getCurrentUser() != null) {
                     //Intent loggedIn = new Intent(LoginActivity.class, Main.class);
                     //startActivity(loggedIn);
-                    Toast.makeText(LoginActivity.this,"COOL!",Toast.LENGTH_LONG).show();
-
+                    Intent i = new Intent(LoginActivity.this, NavDrawerMain.class);
+                    startActivity(i);
                 }
             }
         };
