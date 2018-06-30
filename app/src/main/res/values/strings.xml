@@ -4,4 +4,13 @@
     <string name="login">Log in</string>
     <string name="signup">Sign up</string>
     <string name="title_activity_login">LoginActivity</string>
+    <string name="title_activity_profile">profile</string>
+    <string name="profile_name">Name: </string>
+    <string name="profile_last_name">Last name: </string>
+    <string name="profile_phone_number">Phone number: </string>
+    <string name="profile_email_address">Email address: </string>
+    <string name="profile_friends">Friends: </string>
+    <string name="profile_posts">Posts: </string>
+    <string name="profile_rank">Rank: </string>
+    <string name="title_activity_edit_profile">editProfile</string>
 </resources>

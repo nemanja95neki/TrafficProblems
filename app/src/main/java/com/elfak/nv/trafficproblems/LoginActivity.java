@@ -1,9 +1,11 @@
 package com.elfak.nv.trafficproblems;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -11,17 +13,27 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
 
 import android.support.annotation.NonNull;
 import android.widget.Toast;
 
 public class LoginActivity extends AppCompatActivity {
-
+    private DatabaseReference databaseReference;
+    private FirebaseUser user;
+    private String userID;
     private EditText emailField;
     private EditText passwordField;
     private Button loginButton;
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
+    private User userInfo;
+    private UserLocalStore userLocalStore;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,20 +42,39 @@ public class LoginActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         mAuth = FirebaseAuth.getInstance();
-        emailField = (EditText)findViewById(R.id.email);
-        passwordField = (EditText)findViewById(R.id.password);
-        loginButton = (Button)findViewById(R.id.login);
-
+        emailField = (EditText) findViewById(R.id.email);
+        passwordField = (EditText) findViewById(R.id.password);
+        loginButton = (Button) findViewById(R.id.login);
+        userLocalStore = new UserLocalStore(this);
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 if (firebaseAuth.getCurrentUser() != null) {
-                    //Intent loggedIn = new Intent(LoginActivity.class, Main.class);
-                    //startActivity(loggedIn);
-                    Toast.makeText(LoginActivity.this,"COOL!",Toast.LENGTH_LONG).show();
+                    userID = firebaseAuth.getCurrentUser().getUid();
+                    databaseReference = FirebaseDatabase.getInstance().getReference();
 
+                    databaseReference.child("users").addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            User userInfo = dataSnapshot.child(userID).getValue(User.class);
+                            userInfo.key = dataSnapshot.getKey();
+                            userLocalStore.storeUserData(userInfo);
+                            userLocalStore.setUserLoggedIn(true);
+                            Intent profile = new Intent(LoginActivity.this, Profile.class);
+                            startActivity(profile);
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            //Toast.makeText(ProfileActivity.this,"Something went wrong. Please try again...",Toast.LENGTH_SHORT).show();
+                        }
+                    });
+
+                    //Toast.makeText(LoginActivity.this,"COOL!",Toast.LENGTH_LONG).show();
                 }
             }
+
+
         };
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -68,7 +99,18 @@ public class LoginActivity extends AppCompatActivity {
 
         if(TextUtils.isEmpty(email) || TextUtils.isEmpty(password))
         {
-            Toast.makeText(LoginActivity.this,"Fields are empty!",Toast.LENGTH_LONG).show();
+            if(TextUtils.isEmpty(email)){
+                //email is empty
+                Toast.makeText(this,"Please enter email",Toast.LENGTH_SHORT).show();
+                //stoping the function from execution further
+                return;
+            }
+            if(TextUtils.isEmpty(password)){
+                //password is empty
+                Toast.makeText(this,"Please enter password",Toast.LENGTH_SHORT).show();
+                //stoping the function from execution further
+                return;
+            }
 
         }
         else {
@@ -77,7 +119,9 @@ public class LoginActivity extends AppCompatActivity {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if (task.isSuccessful()) {
-                                Toast.makeText(LoginActivity.this,"Successfuly logged!",Toast.LENGTH_LONG).show();
+                                Intent profile = new Intent(LoginActivity.this,Profile.class);
+                                startActivity(profile);
+                                //Toast.makeText(LoginActivity.this,"Successfuly logged!",Toast.LENGTH_LONG).show();
                             }
                             else {
                                 Toast.makeText(LoginActivity.this,"Please check your email and password and try again!",Toast.LENGTH_LONG).show();

@@ -23,5 +23,33 @@ public class User {
         this.last_name = last_name;
         this.phone_number = phone_number;
     }
+    public User(String key, String email,String password,String first_name,String last_name,String phone_number)
+    {
+        this.key = key;
+        this.email = email;
+        this.password = password;
+        this.first_name = first_name;
+        this.last_name = last_name;
+        this.phone_number = phone_number;
+    }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getFirst_name() {
+        return first_name;
+    }
+
+    public String getLast_name() {
+        return last_name;
+    }
+
+    public String getPhone_number() {
+        return phone_number;
+    }
 }
