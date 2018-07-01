@@ -18,6 +18,9 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -28,10 +31,21 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class NavDrawerMain extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
 
+    private DatabaseReference databaseReference;
+    private FirebaseAuth firebaseAuth;
+    private FirebaseUser user;
+    private User userInfo;
+    private String userID;
+    private UserLocalStore userLocalStore;
 
     private GoogleMap mMap;
     static final int PREMISSION_ACESS_FINE_LOCATION = 1;
@@ -47,6 +61,10 @@ public class NavDrawerMain extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        userLocalStore = new UserLocalStore(this);
+
+        findViewById(R.id.includeActivityProfile).setVisibility(View.INVISIBLE);
+        findViewById(R.id.includeActivityEditProfile).setVisibility(View.INVISIBLE);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -62,6 +80,45 @@ public class NavDrawerMain extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 startNewProblemActivity();
+            }
+        });
+
+        View header = navigationView.getHeaderView(0);
+        LinearLayout profileImageOnSideMenu = (LinearLayout)header.findViewById(R.id.viewProfile);
+
+        profileImageOnSideMenu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent profile = new Intent(NavDrawerMain.this,Profile.class);
+                startActivity(profile);
+            }
+        });
+    }
+    @Override
+    protected void onStart() {
+        super.onStart();
+        firebaseAuth = FirebaseAuth.getInstance();
+
+        user = firebaseAuth.getCurrentUser();
+        if (user == null) {
+            finish();
+            startActivity(new Intent(this, LoginActivity.class));
+        }
+        userID = user.getUid();
+        databaseReference = FirebaseDatabase.getInstance().getReference("users");
+
+        databaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                User userInfo = dataSnapshot.child(userID).getValue(User.class);
+                userInfo.key = userID;
+                userLocalStore.storeUserData(userInfo);
+                userLocalStore.setUserLoggedIn(true);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                //Toast.makeText(ProfileActivity.this,"Something went wrong. Please try again...",Toast.LENGTH_SHORT).show();
             }
         });
     }

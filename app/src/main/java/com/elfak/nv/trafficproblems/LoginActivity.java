@@ -100,7 +100,7 @@ public class LoginActivity extends AppCompatActivity {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if (task.isSuccessful()) {
-                                Intent profile = new Intent(LoginActivity.this,Profile.class);
+                                Intent profile = new Intent(LoginActivity.this,NavDrawerMain.class);
                                 startActivity(profile);
                                 //Toast.makeText(LoginActivity.this,"Successfuly logged!",Toast.LENGTH_LONG).show();
                             }

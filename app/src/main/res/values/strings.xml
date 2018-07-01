@@ -9,6 +9,8 @@
     <string name="profile_last_name">Last name: </string>
     <string name="profile_phone_number">Phone number: </string>
     <string name="profile_email_address">Email address: </string>
+    <string name="profile_email">Email: </string>
+    <string name="profile_password">Password: </string>
     <string name="profile_friends">Friends: </string>
     <string name="profile_posts">Posts: </string>
     <string name="profile_rank">Rank: </string>
