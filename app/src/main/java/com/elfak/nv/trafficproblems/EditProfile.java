@@ -2,6 +2,7 @@ package com.elfak.nv.trafficproblems;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -10,11 +11,22 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.EmailAuthProvider;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -22,7 +34,14 @@ public class EditProfile extends AppCompatActivity implements NavigationView.OnN
     private UserLocalStore userLocalStore;
     private DatabaseReference databaseReference;
     private User user;
+    private FirebaseUser userFirebase;
     EditText editName,editLastName,editEmail,editPassword,editPhoneNumber;
+    boolean isChangedEmail = false;
+    boolean isChangedPassword = false;
+    private User changedUser;
+    private TextView sideMenuEmail, sideMenuName;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,6 +63,13 @@ public class EditProfile extends AppCompatActivity implements NavigationView.OnN
 
         userLocalStore = new UserLocalStore(this);
         user = userLocalStore.getLoggedInUser();
+
+        View header = navigationView.getHeaderView(0);
+        LinearLayout profileImageOnSideMenu = (LinearLayout)header.findViewById(R.id.viewProfile);
+        sideMenuEmail = profileImageOnSideMenu.findViewById(R.id.textEmail);
+        sideMenuName = profileImageOnSideMenu.findViewById(R.id.textUserName);
+        sideMenuEmail.setText(user.email);
+        sideMenuName.setText(user.first_name + " " + user.last_name);
 
         editName = (EditText)findViewById(R.id.editName);
         editLastName = (EditText)findViewById(R.id.editLastName);
@@ -68,9 +94,57 @@ public class EditProfile extends AppCompatActivity implements NavigationView.OnN
                 String email = editEmail.getText().toString();
                 String password = editPassword.getText().toString();
                 String phone_number = editPhoneNumber.getText().toString();
-                User changedUser = new User(user.key,email,password,name,last_name,phone_number);
+                if(password.length()<=6)
+                {
+                    Toast.makeText(EditProfile.this,"Password must be at least 6 characters.",Toast.LENGTH_LONG).show();
+                    return;
+                }
+                if(!email.contains("@"))
+                {
+                    Toast.makeText(EditProfile.this,"Please enter a valid email address.",Toast.LENGTH_LONG).show();
+                    return;
+                }
+                changedUser = new User(user.key,email,password,name,last_name,phone_number);
                 databaseReference = FirebaseDatabase.getInstance().getReference();
                 databaseReference.child("users").child(changedUser.key).setValue(changedUser);
+
+                if(changedUser.password!=user.password)
+                {
+                    isChangedPassword = true;
+                }
+                if(changedUser.email!=user.email)
+                {
+                    isChangedEmail = true;
+                }
+                if(isChangedEmail == true || isChangedPassword == true) {
+                    userFirebase = FirebaseAuth.getInstance().getCurrentUser();
+
+                    if(isChangedEmail == true) {
+                        userFirebase.updateEmail(changedUser.email).addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()) {
+                                    //Log.d(TAG, "Password updated");
+                                } else {
+                                    //Log.d(TAG, "Error password not updated");
+                                }
+                            }
+                        });
+                    }
+                    if(isChangedPassword == true)
+                    {
+                        userFirebase.updatePassword(changedUser.password).addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()) {
+                                    //Log.d(TAG, "Password updated");
+                                } else {
+                                    //Log.d(TAG, "Error password not updated");
+                                }
+                            }
+                        });
+                    }
+                }
                 userLocalStore.clearUserData();
                 userLocalStore.storeUserData(changedUser);
                 userLocalStore.setUserLoggedIn(true);
@@ -82,6 +156,30 @@ public class EditProfile extends AppCompatActivity implements NavigationView.OnN
                 data.putExtra("phone_number",changedUser.phone_number);
                 setResult(RESULT_OK, data);
                 finish();
+            }
+        });
+        Menu menuNav = navigationView.getMenu();
+        MenuItem editProfile = menuNav.findItem(R.id.nav_edit_profile);
+        MenuItem logoutUser = menuNav.findItem(R.id.logout);
+
+        logoutUser.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                userLocalStore.setUserLoggedIn(false);
+                userLocalStore.clearUserData();
+                FirebaseAuth.getInstance().signOut();
+                Intent login = new Intent(EditProfile.this,LoginActivity.class);
+                startActivity(login);
+                return true;
+            }
+        });
+
+        editProfile.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                Intent editProfile = new Intent(EditProfile.this, EditProfile.class);
+                startActivity(editProfile);
+                return true;
             }
         });
     }

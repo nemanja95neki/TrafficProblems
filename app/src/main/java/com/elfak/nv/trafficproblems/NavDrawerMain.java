@@ -1,6 +1,8 @@
 package com.elfak.nv.trafficproblems;
 
 import android.Manifest;
+import android.app.LauncherActivity;
+import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -37,6 +39,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import org.w3c.dom.Text;
+
 public class NavDrawerMain extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
 
@@ -46,7 +50,7 @@ public class NavDrawerMain extends AppCompatActivity
     private User userInfo;
     private String userID;
     private UserLocalStore userLocalStore;
-
+    private TextView sideMenuEmail, sideMenuName;
     private GoogleMap mMap;
     static final int PREMISSION_ACESS_FINE_LOCATION = 1;
 
@@ -85,6 +89,33 @@ public class NavDrawerMain extends AppCompatActivity
 
         View header = navigationView.getHeaderView(0);
         LinearLayout profileImageOnSideMenu = (LinearLayout)header.findViewById(R.id.viewProfile);
+        sideMenuEmail = profileImageOnSideMenu.findViewById(R.id.textEmail);
+        sideMenuName = profileImageOnSideMenu.findViewById(R.id.textUserName);
+
+        Menu menuNav = navigationView.getMenu();
+        MenuItem editProfile = menuNav.findItem(R.id.nav_edit_profile);
+        MenuItem logoutUser = menuNav.findItem(R.id.logout);
+
+        logoutUser.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                userLocalStore.setUserLoggedIn(false);
+                userLocalStore.clearUserData();
+                FirebaseAuth.getInstance().signOut();
+                Intent login = new Intent(NavDrawerMain.this,LoginActivity.class);
+                startActivity(login);
+                return true;
+            }
+        });
+
+        editProfile.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                Intent editProfile = new Intent(NavDrawerMain.this, EditProfile.class);
+                startActivityForResult(editProfile,1);
+                return true;
+            }
+        });
 
         profileImageOnSideMenu.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -110,10 +141,12 @@ public class NavDrawerMain extends AppCompatActivity
         databaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                User userInfo = dataSnapshot.child(userID).getValue(User.class);
+                userInfo = dataSnapshot.child(userID).getValue(User.class);
                 userInfo.key = userID;
                 userLocalStore.storeUserData(userInfo);
                 userLocalStore.setUserLoggedIn(true);
+                sideMenuName.setText(userInfo.first_name + " " + userInfo.last_name);
+                sideMenuEmail.setText(userInfo.email);
             }
 
             @Override
@@ -214,6 +247,21 @@ public class NavDrawerMain extends AppCompatActivity
 
                 }
                 return;
+            }
+        }
+    }
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 1) {
+            if (resultCode == RESULT_OK) {
+                String returned_name = data.getStringExtra("name");
+                String returned_last_name = data.getStringExtra("last_name");
+                String returned_email = data.getStringExtra("email");
+                String returned_password = data.getStringExtra("password");
+                String returned_phone_number = data.getStringExtra("phone_number");
+
+                sideMenuEmail.setText(returned_email);
+                sideMenuName.setText(returned_name + " " + returned_last_name);
             }
         }
     }

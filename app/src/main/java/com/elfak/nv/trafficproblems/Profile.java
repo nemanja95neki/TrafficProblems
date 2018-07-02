@@ -16,6 +16,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,6 +36,7 @@ public class Profile extends AppCompatActivity implements NavigationView.OnNavig
     private TextView name, last_name, email, phone_number;
     private ImageButton editButton;
     private String userID;
+    private TextView sideMenuEmail, sideMenuName;
     private UserLocalStore userLocalStore;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,7 +57,6 @@ public class Profile extends AppCompatActivity implements NavigationView.OnNavig
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-
         name = (TextView)findViewById(R.id.name);
         last_name = (TextView)findViewById(R.id.last_name);
         email = (TextView)findViewById(R.id.email_address);
@@ -64,6 +65,13 @@ public class Profile extends AppCompatActivity implements NavigationView.OnNavig
 
         userLocalStore = new UserLocalStore(this);
         User user = userLocalStore.getLoggedInUser();
+
+        View header = navigationView.getHeaderView(0);
+        LinearLayout profileImageOnSideMenu = (LinearLayout)header.findViewById(R.id.viewProfile);
+        sideMenuEmail = profileImageOnSideMenu.findViewById(R.id.textEmail);
+        sideMenuName = profileImageOnSideMenu.findViewById(R.id.textUserName);
+        sideMenuEmail.setText(user.email);
+        sideMenuName.setText(user.first_name + " " + user.last_name);
 
         name.setText("Name: " + user.first_name);
         last_name.setText("Last name: " + user.last_name);
@@ -75,6 +83,31 @@ public class Profile extends AppCompatActivity implements NavigationView.OnNavig
             public void onClick(View v) {
                 Intent editProfile = new Intent(Profile.this, EditProfile.class);
                 startActivityForResult(editProfile,1);
+            }
+        });
+
+        Menu menuNav = navigationView.getMenu();
+        MenuItem editProfile = menuNav.findItem(R.id.nav_edit_profile);
+        MenuItem logoutUser = menuNav.findItem(R.id.logout);
+
+        logoutUser.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                userLocalStore.setUserLoggedIn(false);
+                userLocalStore.clearUserData();
+                FirebaseAuth.getInstance().signOut();
+                Intent login = new Intent(Profile.this,LoginActivity.class);
+                startActivity(login);
+                return true;
+            }
+        });
+
+        editProfile.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                Intent editProfile = new Intent(Profile.this, EditProfile.class);
+                startActivityForResult(editProfile,1);
+                return true;
             }
         });
     }
@@ -139,6 +172,9 @@ public class Profile extends AppCompatActivity implements NavigationView.OnNavig
                 last_name.setText("Last name: " + returned_last_name);
                 email.setText("Email: " + returned_email);
                 phone_number.setText("Phone number: " + returned_phone_number);
+
+                sideMenuEmail.setText(returned_email);
+                sideMenuName.setText(returned_name + " " + returned_last_name);
             }
         }
     }
