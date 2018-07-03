@@ -197,21 +197,57 @@
         app:layout_constraintTop_toBottomOf="@+id/editLastName" />
 
     <ImageView
-        android:id="@+id/imageView"
+        android:id="@+id/profilePictureInEdit"
         android:layout_width="0dp"
-        android:layout_height="194dp"
+        android:layout_height="196dp"
         android:layout_marginBottom="10dp"
         android:layout_marginEnd="72dp"
         android:layout_marginLeft="72dp"
         android:layout_marginRight="72dp"
         android:layout_marginStart="72dp"
         android:layout_marginTop="10dp"
+        android:background="@drawable/border_image"
         android:src="@drawable/profile"
         app:layout_constraintBottom_toTopOf="@+id/divider"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/capture"
+        android:layout_width="33dp"
+        android:layout_height="33dp"
+        android:layout_marginEnd="23dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="23dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="51dp"
+        android:background="@android:color/transparent"
+        android:scaleType="fitXY"
+        app:layout_constraintBottom_toTopOf="@+id/editProfilePicture"
+        app:layout_constraintEnd_toStartOf="@+id/profilePictureInEdit"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/capture_white" />
+
+    <ImageButton
+        android:id="@+id/editProfilePicture"
+        android:layout_width="33dp"
+        android:layout_height="33dp"
+        android:layout_marginBottom="62dp"
+        android:layout_marginEnd="23dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="23dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="29dp"
+        android:background="@android:color/transparent"
+        android:scaleType="fitXY"
+        app:layout_constraintBottom_toTopOf="@+id/divider"
+        app:layout_constraintEnd_toStartOf="@+id/profilePictureInEdit"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/capture"
+        app:srcCompat="@drawable/edit_white" />
 
     <ImageButton
         android:id="@+id/save"
@@ -225,9 +261,9 @@
         android:background="@android:color/transparent"
         android:scaleType="fitXY"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/imageView"
+        app:layout_constraintStart_toEndOf="@+id/profilePictureInEdit"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/save" />
+        app:srcCompat="@drawable/save_white" />
 
     <View
         android:id="@+id/divider"
@@ -239,6 +275,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView" />
+        app:layout_constraintTop_toBottomOf="@+id/profilePictureInEdit" />
 
 </android.support.constraint.ConstraintLayout>

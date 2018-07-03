@@ -2,7 +2,15 @@ package com.elfak.nv.trafficproblems;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.media.ExifInterface;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -16,10 +24,15 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -28,6 +41,14 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FileDownloadTask;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.squareup.picasso.Picasso;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 
 public class Profile extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private DatabaseReference databaseReference;
@@ -38,6 +59,11 @@ public class Profile extends AppCompatActivity implements NavigationView.OnNavig
     private String userID;
     private TextView sideMenuEmail, sideMenuName;
     private UserLocalStore userLocalStore;
+    private UserAvatarStore userAvatarStore;
+    private User userInfo;
+    private StorageReference mStorageRef;
+    private ImageView imageView,imageSideMenu;
+    private Bitmap avatar;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,6 +71,7 @@ public class Profile extends AppCompatActivity implements NavigationView.OnNavig
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        mStorageRef = FirebaseStorage.getInstance().getReference();
         findViewById(R.id.includeMainView).setVisibility(View.INVISIBLE);
         findViewById(R.id.includeActivityEditProfile).setVisibility(View.INVISIBLE);
 
@@ -62,21 +89,26 @@ public class Profile extends AppCompatActivity implements NavigationView.OnNavig
         email = (TextView)findViewById(R.id.email_address);
         phone_number = (TextView)findViewById(R.id.phone_number);
         editButton = (ImageButton)findViewById(R.id.edit);
+        imageView = (ImageView) findViewById(R.id.imageView);
 
         userLocalStore = new UserLocalStore(this);
-        User user = userLocalStore.getLoggedInUser();
+        userInfo = userLocalStore.getLoggedInUser();
+        userAvatarStore = new UserAvatarStore(this);
+        avatar = userAvatarStore.getUserAvatar();
+
 
         View header = navigationView.getHeaderView(0);
         LinearLayout profileImageOnSideMenu = (LinearLayout)header.findViewById(R.id.viewProfile);
         sideMenuEmail = profileImageOnSideMenu.findViewById(R.id.textEmail);
         sideMenuName = profileImageOnSideMenu.findViewById(R.id.textUserName);
-        sideMenuEmail.setText(user.email);
-        sideMenuName.setText(user.first_name + " " + user.last_name);
+        sideMenuEmail.setText(userInfo.email);
+        sideMenuName.setText(userInfo.first_name + " " + userInfo.last_name);
+        imageSideMenu = (ImageView)profileImageOnSideMenu.findViewById(R.id.imageProfileImage);
 
-        name.setText("Name: " + user.first_name);
-        last_name.setText("Last name: " + user.last_name);
-        email.setText("Email: " + user.email);
-        phone_number.setText("Phone number: " + user.phone_number);
+        name.setText("Name: " + userInfo.first_name);
+        last_name.setText("Last name: " + userInfo.last_name);
+        email.setText("Email: " + userInfo.email);
+        phone_number.setText("Phone number: " + userInfo.phone_number);
 
         editButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -85,6 +117,7 @@ public class Profile extends AppCompatActivity implements NavigationView.OnNavig
                 startActivityForResult(editProfile,1);
             }
         });
+
 
         Menu menuNav = navigationView.getMenu();
         MenuItem editProfile = menuNav.findItem(R.id.nav_edit_profile);
@@ -95,6 +128,7 @@ public class Profile extends AppCompatActivity implements NavigationView.OnNavig
             public boolean onMenuItemClick(MenuItem item) {
                 userLocalStore.setUserLoggedIn(false);
                 userLocalStore.clearUserData();
+                userAvatarStore.clearUserData();
                 FirebaseAuth.getInstance().signOut();
                 Intent login = new Intent(Profile.this,LoginActivity.class);
                 startActivity(login);
@@ -114,7 +148,18 @@ public class Profile extends AppCompatActivity implements NavigationView.OnNavig
     @Override
     protected void onStart() {
         super.onStart();
+        if(avatar!=null) {
+            avatar = userAvatarStore.getUserAvatar();
+            imageView.setImageBitmap(avatar);
+            imageSideMenu.setImageBitmap(avatar);
+        }
+        /*try {
+            setProfilePicture();
+            //setProfilePictureSideMenu();
 
+        }catch (IOException e){
+            e.printStackTrace();
+        }*/
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -175,7 +220,120 @@ public class Profile extends AppCompatActivity implements NavigationView.OnNavig
 
                 sideMenuEmail.setText(returned_email);
                 sideMenuName.setText(returned_name + " " + returned_last_name);
+                /*avatar = userAvatarStore.getUserAvatar();
+
+                if(avatar!=null) {
+                    imageView.setImageBitmap(avatar);
+                    imageSideMenu.setImageBitmap(avatar);
+                }*/
+
+               /* try {
+                    setProfilePicture();
+                    //setProfilePictureSideMenu();
+
+                }catch (IOException e){
+                    e.printStackTrace();
+                }*/
             }
         }
     }
+
+    private void setProfilePicture() throws IOException {
+        final File localFile = File.createTempFile("images", "jpg");
+        StorageReference profileRef = mStorageRef.child("Avatars").child(userInfo.key);
+        profileRef.getFile(localFile)
+                .addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                        String imageLocation = localFile.getAbsolutePath();
+                        rotateImage(setReducedImageSize(imageLocation), imageLocation);
+                        imageSideMenu.setImageBitmap(BitmapFactory.decodeFile(imageLocation));
+                        //imageView.setImageBitmap(bmp);
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Handle failed download
+                // Toast.makeText(getApplicationContext(),"Something went wrong, couldn't download profile picture",Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+    private Bitmap setReducedImageSize(String fileLocation){
+        int targetImageViewWidth = imageView.getWidth();
+        int targetImageViewHeight = imageView.getHeight();
+
+        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+        bmOptions.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(fileLocation,bmOptions);
+        int cameraImageWidth = bmOptions.outWidth;
+        int cameraImageHeight = bmOptions.outHeight;
+
+        int scaleFactor = Math.min(cameraImageHeight/targetImageViewHeight,cameraImageWidth/targetImageViewWidth);
+
+        bmOptions.inSampleSize = scaleFactor;
+        bmOptions.inJustDecodeBounds = false;
+
+        return BitmapFactory.decodeFile(fileLocation, bmOptions);
+    }
+
+    private void rotateImage(Bitmap bitmap,String fileLocation){
+
+        ExifInterface exifInterface = null;
+        try{
+            exifInterface = new ExifInterface(fileLocation);
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+        int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION,ExifInterface.ORIENTATION_UNDEFINED);
+        Matrix matrix = new Matrix();
+        switch (orientation){
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                matrix.setRotate(90);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                matrix.setRotate(180);
+                break;
+            case ExifInterface.ORIENTATION_FLIP_HORIZONTAL:
+                matrix.setScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_FLIP_VERTICAL:
+                matrix.setRotate(180);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_TRANSPOSE:
+                matrix.setRotate(90);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_TRANSVERSE:
+                matrix.setRotate(-90);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                matrix.setRotate(-90);
+                break;
+            default:
+        }
+        Bitmap rotatedBmp = Bitmap.createBitmap(bitmap,0,0,bitmap.getWidth(),bitmap.getHeight(),matrix,true);
+        imageView.setImageBitmap(rotatedBmp);
+    }
+
+    private void setProfilePictureSideMenu() throws IOException {
+        final File localFile = File.createTempFile("imageSideMenu", "jpg");
+        final StorageReference profileRef = mStorageRef.child("Avatars").child(userInfo.key);
+        profileRef.getFile(localFile)
+                .addOnSuccessListener(this, new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                        //When the image has successfully uploaded, get its download URL
+                        profileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                Uri dlUri = uri;
+                                Picasso.get().load(uri).fit().into(imageSideMenu);
+                            }
+                        });
+                    }
+                });
+    }
+
 }

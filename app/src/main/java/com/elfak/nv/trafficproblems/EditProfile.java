@@ -1,11 +1,28 @@
 package com.elfak.nv.trafficproblems;
 
+import android.Manifest;
+import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.media.ExifInterface;
+import android.graphics.Matrix;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -17,11 +34,15 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.EmailAuthProvider;
@@ -29,9 +50,22 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FileDownloadTask;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+import com.squareup.picasso.Picasso;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class EditProfile extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private UserLocalStore userLocalStore;
+    private UserAvatarStore userAvatarStore;
     private DatabaseReference databaseReference;
     private User user;
     private FirebaseUser userFirebase;
@@ -40,7 +74,12 @@ public class EditProfile extends AppCompatActivity implements NavigationView.OnN
     boolean isChangedPassword = false;
     private User changedUser;
     private TextView sideMenuEmail, sideMenuName;
-
+    private StorageReference mStorageRef;
+    private ImageView imageView,imageSideMenu;;
+    private static final int GALLERY_INTENT = 2;
+    private static final int CAMERA_REQUEST_CODE = 1;
+    private ProgressDialog progressDialog;
+    private Bitmap avatar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +87,9 @@ public class EditProfile extends AppCompatActivity implements NavigationView.OnN
         setContentView(R.layout.activity_nav_drawer_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        mStorageRef = FirebaseStorage.getInstance().getReference();
+        progressDialog = new ProgressDialog(this);
 
         findViewById(R.id.includeMainView).setVisibility(View.INVISIBLE);
         findViewById(R.id.includeActivityProfile).setVisibility(View.INVISIBLE);
@@ -63,6 +105,8 @@ public class EditProfile extends AppCompatActivity implements NavigationView.OnN
 
         userLocalStore = new UserLocalStore(this);
         user = userLocalStore.getLoggedInUser();
+        userAvatarStore = new UserAvatarStore(this);
+        avatar = userAvatarStore.getUserAvatar();
 
         View header = navigationView.getHeaderView(0);
         LinearLayout profileImageOnSideMenu = (LinearLayout)header.findViewById(R.id.viewProfile);
@@ -70,6 +114,7 @@ public class EditProfile extends AppCompatActivity implements NavigationView.OnN
         sideMenuName = profileImageOnSideMenu.findViewById(R.id.textUserName);
         sideMenuEmail.setText(user.email);
         sideMenuName.setText(user.first_name + " " + user.last_name);
+        imageSideMenu = (ImageView)profileImageOnSideMenu.findViewById(R.id.imageProfileImage);
 
         editName = (EditText)findViewById(R.id.editName);
         editLastName = (EditText)findViewById(R.id.editLastName);
@@ -77,6 +122,9 @@ public class EditProfile extends AppCompatActivity implements NavigationView.OnN
         editPassword = (EditText)findViewById(R.id.editPassword);
         editPhoneNumber = (EditText)findViewById(R.id.editPhoneNumber);
         ImageButton saveButton = (ImageButton)findViewById(R.id.save);
+        ImageButton editProfilePicture = (ImageButton)findViewById(R.id.editProfilePicture);
+        ImageButton capture = (ImageButton)findViewById(R.id.capture);
+        imageView = (ImageView) findViewById(R.id.profilePictureInEdit);
 
         editName.setText(user.first_name);
         editLastName.setText(user.last_name);
@@ -158,6 +206,18 @@ public class EditProfile extends AppCompatActivity implements NavigationView.OnN
                 finish();
             }
         });
+
+        /*try {
+            setProfilePicture();
+        }catch (IOException e){
+            e.printStackTrace();
+        }*/
+        if(avatar!=null)
+        {
+            imageView.setImageBitmap(avatar);
+            imageSideMenu.setImageBitmap(avatar);
+        }
+
         Menu menuNav = navigationView.getMenu();
         MenuItem editProfile = menuNav.findItem(R.id.nav_edit_profile);
         MenuItem logoutUser = menuNav.findItem(R.id.logout);
@@ -167,6 +227,7 @@ public class EditProfile extends AppCompatActivity implements NavigationView.OnN
             public boolean onMenuItemClick(MenuItem item) {
                 userLocalStore.setUserLoggedIn(false);
                 userLocalStore.clearUserData();
+                userAvatarStore.clearUserData();
                 FirebaseAuth.getInstance().signOut();
                 Intent login = new Intent(EditProfile.this,LoginActivity.class);
                 startActivity(login);
@@ -174,16 +235,36 @@ public class EditProfile extends AppCompatActivity implements NavigationView.OnN
             }
         });
 
-        editProfile.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+        /*editProfile.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 Intent editProfile = new Intent(EditProfile.this, EditProfile.class);
                 startActivity(editProfile);
                 return true;
             }
-        });
-    }
+        });*/
 
+        editProfilePicture.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_PICK);
+                intent.setType("image/*");
+                if(intent.resolveActivity(getPackageManager()) != null) {
+                    startActivityForResult(intent, GALLERY_INTENT);
+                }
+            }
+        });
+        capture.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                if(intent.resolveActivity(getPackageManager()) != null) {
+                    startActivityForResult(intent, CAMERA_REQUEST_CODE);
+                }
+            }
+        });
+
+    }
 
 
     @SuppressWarnings("StatementWithEmptyBody")
@@ -206,5 +287,159 @@ public class EditProfile extends AppCompatActivity implements NavigationView.OnN
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode,resultCode,data);
+        if (requestCode == GALLERY_INTENT && resultCode == RESULT_OK) {
+            progressDialog.setMessage("Uploading...");
+            progressDialog.show();
+            Uri uri = data.getData();
+            Bitmap imageBitmap = null;
+            try {
+                imageBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            userAvatarStore.clearUserData();
+            userAvatarStore.storeUserAvatar(imageBitmap);
+            Picasso.get().load(uri).fit().centerCrop().into(imageView);
+            Picasso.get().load(uri).into(imageSideMenu);
+            final StorageReference filePath = mStorageRef.child("Avatars").child(user.key);
+            filePath.putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    Toast.makeText(EditProfile.this,"Upload done.",Toast.LENGTH_SHORT).show();
+                    progressDialog.dismiss();
+                }
+            });
+
+        }
+        if (requestCode == CAMERA_REQUEST_CODE && resultCode == RESULT_OK) {
+            progressDialog.setMessage("Uploading image...");
+            progressDialog.show();
+            //Uri uri = data.getData();
+            Bundle extras = data.getExtras();
+            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            imageView.setImageBitmap(imageBitmap);
+            userAvatarStore.clearUserData();
+            userAvatarStore.storeUserAvatar(imageBitmap);
+            // CALL THIS METHOD TO GET THE URI FROM THE BITMAP
+            Uri uri = getImageUri(getApplicationContext(), imageBitmap);
+            Picasso.get().load(uri).into(imageSideMenu);
+            final StorageReference filePath = mStorageRef.child("Avatars").child(user.key);
+            filePath.putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    Toast.makeText(EditProfile.this,"Uploading finished.",Toast.LENGTH_SHORT).show();
+                    progressDialog.dismiss();
+                }
+
+            })
+                    .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception exception) {
+                    progressDialog.dismiss();
+                    // Handle unsuccessful uploads
+                    Toast.makeText(EditProfile.this, "Something went wrong.." + exception.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            })
+                    .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                            //displaying the upload progress
+                             @SuppressWarnings("VisibleForTests")
+                            double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                            progressDialog.setMessage("Uploaded " + ((int) progress) + "%...");
+                        }
+                    });
+        }
+    }
+    public Uri getImageUri(Context inContext, Bitmap inImage) {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+        String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, "Title", null);
+        return Uri.parse(path);
+    }
+    private void setProfilePicture() throws IOException {
+        final File localFile = File.createTempFile("images", "jpg");
+        StorageReference profileRef = mStorageRef.child("Avatars").child(user.key);
+        profileRef.getFile(localFile)
+                .addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                        String imageLocation = localFile.getAbsolutePath();
+                        rotateImage(setReducedImageSize(imageLocation),imageLocation);
+                        imageSideMenu.setImageBitmap(BitmapFactory.decodeFile(imageLocation));
+                        //imageView.setImageBitmap(bmp);
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Handle failed download
+                // Toast.makeText(getApplicationContext(),"Something went wrong, couldn't download profile picture",Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+    private Bitmap setReducedImageSize(String fileLocation){
+        int targetImageViewWidth = imageView.getWidth();
+        int targetImageViewHeight = imageView.getHeight();
+
+        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+        bmOptions.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(fileLocation,bmOptions);
+        int cameraImageWidth = bmOptions.outWidth;
+        int cameraImageHeight = bmOptions.outHeight;
+
+        int scaleFactor = Math.min(cameraImageHeight/targetImageViewHeight,cameraImageWidth/targetImageViewWidth);
+
+        bmOptions.inSampleSize = scaleFactor;
+        bmOptions.inJustDecodeBounds = false;
+
+        return BitmapFactory.decodeFile(fileLocation, bmOptions);
+    }
+
+    private void rotateImage(Bitmap bitmap,String fileLocation){
+
+        ExifInterface exifInterface = null;
+        try{
+            exifInterface = new ExifInterface(fileLocation);
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+        int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION,ExifInterface.ORIENTATION_UNDEFINED);
+        Matrix matrix = new Matrix();
+        switch (orientation){
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                matrix.setRotate(90);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                matrix.setRotate(180);
+                break;
+            case ExifInterface.ORIENTATION_FLIP_HORIZONTAL:
+                matrix.setScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_FLIP_VERTICAL:
+                matrix.setRotate(180);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_TRANSPOSE:
+                matrix.setRotate(90);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_TRANSVERSE:
+                matrix.setRotate(-90);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                matrix.setRotate(-90);
+                break;
+            default:
+        }
+        Bitmap rotatedBmp = Bitmap.createBitmap(bitmap,0,0,bitmap.getWidth(),bitmap.getHeight(),matrix,true);
+        imageView.setImageBitmap(rotatedBmp);
+    }
+
+
 
 }
