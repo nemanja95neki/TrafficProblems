@@ -1,8 +1,14 @@
 package com.elfak.nv.trafficproblems;
 
 import android.Manifest;
+import android.app.LauncherActivity;
+import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -18,6 +24,9 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -26,16 +35,41 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FileDownloadTask;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+
+import org.w3c.dom.Text;
+
+import java.io.File;
+import java.io.IOException;
 
 public class NavDrawerMain extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
 
-
+    private DatabaseReference databaseReference;
+    private FirebaseAuth firebaseAuth;
+    private FirebaseUser user;
+    private User userInfo;
+    private String userID;
+    private UserLocalStore userLocalStore;
+    private UserAvatarStore userAvatarStore;
+    private TextView sideMenuEmail, sideMenuName;
     private GoogleMap mMap;
     static final int PREMISSION_ACESS_FINE_LOCATION = 1;
-
+    private ImageView imageSideMenu;
+    private StorageReference mStorageRef;
+    private boolean firstLoad = false;
+    private Bitmap avatar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,7 +80,12 @@ public class NavDrawerMain extends AppCompatActivity
         mapFragment.getMapAsync(this);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
+        mStorageRef = FirebaseStorage.getInstance().getReference();
+        userLocalStore = new UserLocalStore(this);
+        userAvatarStore = new UserAvatarStore(this);
+        firstLoad = true;
+        findViewById(R.id.includeActivityProfile).setVisibility(View.INVISIBLE);
+        findViewById(R.id.includeActivityEditProfile).setVisibility(View.INVISIBLE);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -64,6 +103,93 @@ public class NavDrawerMain extends AppCompatActivity
                 startNewProblemActivity();
             }
         });
+
+        View header = navigationView.getHeaderView(0);
+        LinearLayout profileImageOnSideMenu = (LinearLayout)header.findViewById(R.id.viewProfile);
+        sideMenuEmail = profileImageOnSideMenu.findViewById(R.id.textEmail);
+        sideMenuName = profileImageOnSideMenu.findViewById(R.id.textUserName);
+        imageSideMenu = (ImageView)profileImageOnSideMenu.findViewById(R.id.imageProfileImage);
+
+        Menu menuNav = navigationView.getMenu();
+        MenuItem editProfile = menuNav.findItem(R.id.nav_edit_profile);
+        MenuItem logoutUser = menuNav.findItem(R.id.logout);
+
+        logoutUser.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                userLocalStore.setUserLoggedIn(false);
+                userLocalStore.clearUserData();
+                userAvatarStore.clearUserData();
+                FirebaseAuth.getInstance().signOut();
+                Intent login = new Intent(NavDrawerMain.this,LoginActivity.class);
+                startActivity(login);
+                return true;
+            }
+        });
+
+        editProfile.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                Intent editProfile = new Intent(NavDrawerMain.this, EditProfile.class);
+                startActivityForResult(editProfile,1);
+                return true;
+            }
+        });
+
+        profileImageOnSideMenu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent profile = new Intent(NavDrawerMain.this,Profile.class);
+                startActivity(profile);
+            }
+        });
+    }
+    @Override
+    protected void onStart() {
+        super.onStart();
+        firebaseAuth = FirebaseAuth.getInstance();
+
+        user = firebaseAuth.getCurrentUser();
+        if (user == null) {
+            finish();
+            startActivity(new Intent(this, LoginActivity.class));
+        }
+        userID = user.getUid();
+        databaseReference = FirebaseDatabase.getInstance().getReference("users");
+
+        databaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                userInfo = dataSnapshot.child(userID).getValue(User.class);
+                userInfo.key = userID;
+                userLocalStore.storeUserData(userInfo);
+                userLocalStore.setUserLoggedIn(true);
+                sideMenuName.setText(userInfo.first_name + " " + userInfo.last_name);
+                sideMenuEmail.setText(userInfo.email);
+                try {
+                    if(firstLoad == true){
+                        setProfilePicture();
+                    }
+                    firstLoad = false;
+                    //setProfilePictureSideMenu();
+
+                }catch (IOException e){
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                //Toast.makeText(ProfileActivity.this,"Something went wrong. Please try again...",Toast.LENGTH_SHORT).show();
+            }
+        });
+        if(firstLoad == false) {
+            avatar = userAvatarStore.getUserAvatar();
+
+            if (avatar != null) {
+                imageSideMenu.setImageBitmap(avatar);
+            }
+        }
     }
 
     private void startNewProblemActivity()
@@ -159,5 +285,98 @@ public class NavDrawerMain extends AppCompatActivity
                 return;
             }
         }
+    }
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 1) {
+            if (resultCode == RESULT_OK) {
+                String returned_name = data.getStringExtra("name");
+                String returned_last_name = data.getStringExtra("last_name");
+                String returned_email = data.getStringExtra("email");
+                String returned_password = data.getStringExtra("password");
+                String returned_phone_number = data.getStringExtra("phone_number");
+
+                sideMenuEmail.setText(returned_email);
+                sideMenuName.setText(returned_name + " " + returned_last_name);
+            }
+        }
+    }
+
+    private void setProfilePicture() throws IOException {
+        final File localFile = File.createTempFile("images", "jpg");
+        StorageReference profileRef = mStorageRef.child("Avatars").child(userInfo.key);
+        profileRef.getFile(localFile)
+                .addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                        String imageLocation = localFile.getAbsolutePath();
+                        rotateImage(setReducedImageSize(imageLocation), imageLocation);
+                        userAvatarStore.storeUserAvatar(BitmapFactory.decodeFile(imageLocation));
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Handle failed download
+                // Toast.makeText(getApplicationContext(),"Something went wrong, couldn't download profile picture",Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+    private Bitmap setReducedImageSize(String fileLocation){
+        int targetImageViewWidth = imageSideMenu.getWidth();
+        int targetImageViewHeight = imageSideMenu.getHeight();
+
+        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+        bmOptions.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(fileLocation,bmOptions);
+        int cameraImageWidth = bmOptions.outWidth;
+        int cameraImageHeight = bmOptions.outHeight;
+
+        int scaleFactor = Math.min(cameraImageHeight/targetImageViewHeight,cameraImageWidth/targetImageViewWidth);
+
+        bmOptions.inSampleSize = scaleFactor;
+        bmOptions.inJustDecodeBounds = false;
+
+        return BitmapFactory.decodeFile(fileLocation, bmOptions);
+    }
+
+    private void rotateImage(Bitmap bitmap,String fileLocation){
+
+        ExifInterface exifInterface = null;
+        try{
+            exifInterface = new ExifInterface(fileLocation);
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+        int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION,ExifInterface.ORIENTATION_UNDEFINED);
+        Matrix matrix = new Matrix();
+        switch (orientation){
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                matrix.setRotate(90);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                matrix.setRotate(180);
+                break;
+            case ExifInterface.ORIENTATION_FLIP_HORIZONTAL:
+                matrix.setScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_FLIP_VERTICAL:
+                matrix.setRotate(180);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_TRANSPOSE:
+                matrix.setRotate(90);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_TRANSVERSE:
+                matrix.setRotate(-90);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                matrix.setRotate(-90);
+                break;
+            default:
+        }
+        Bitmap rotatedBmp = Bitmap.createBitmap(bitmap,0,0,bitmap.getWidth(),bitmap.getHeight(),matrix,true);
+        imageSideMenu.setImageBitmap(rotatedBmp);
     }
 }

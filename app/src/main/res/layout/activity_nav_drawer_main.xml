@@ -9,10 +9,20 @@
     tools:openDrawer="start">
 
     <include
+        android:id="@+id/includeMainView"
         layout="@layout/app_bar_nav_drawer_main"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
-
+    <include
+        android:id="@+id/includeActivityProfile"
+        layout="@layout/activity_profile"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+    <include
+        android:id="@+id/includeActivityEditProfile"
+        layout="@layout/activity_edit_profile"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
     <android.support.design.widget.NavigationView
         android:id="@+id/nav_view"
