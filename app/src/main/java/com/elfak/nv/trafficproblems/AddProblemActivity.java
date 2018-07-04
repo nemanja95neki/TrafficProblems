@@ -215,31 +215,27 @@ public class AddProblemActivity extends AppCompatActivity {
         else if(desc.isEmpty())
         {
             Toast.makeText(AddProblemActivity.this,"Please enter desctiption!",Toast.LENGTH_LONG).show();
-            nameTxt.requestFocus();
+            descTxt.requestFocus();
             return false;
         }
         else if(prior==null)
         {
             Toast.makeText(AddProblemActivity.this,"Please choose priority!",Toast.LENGTH_LONG).show();
-            nameTxt.requestFocus();
             return false;
         }
-        else if(longit.isEmpty())
+        else if(longit==null || longit.isEmpty())
         {
             Toast.makeText(AddProblemActivity.this,"Please choose location!",Toast.LENGTH_LONG).show();
-            nameTxt.requestFocus();
             return false;
         }
-        else if(lat.isEmpty())
+        else if(lat==null || lat.isEmpty())
         {
             Toast.makeText(AddProblemActivity.this,"Please choose location!",Toast.LENGTH_LONG).show();
-            nameTxt.requestFocus();
             return false;
         }
         else if(problemImage==null || uri==null)
         {
             Toast.makeText(AddProblemActivity.this,"Please choose image!",Toast.LENGTH_LONG).show();
-            nameTxt.requestFocus();
             return false;
         }
         else
