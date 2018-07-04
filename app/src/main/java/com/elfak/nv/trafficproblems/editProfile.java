@@ -273,13 +273,11 @@ public class EditProfile extends AppCompatActivity implements NavigationView.OnN
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
+        if (id == R.id.nav_edit_profile) {
             // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
+        } else if (id == R.id.nav_friends) {
 
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_share) {
+        } else if (id == R.id.nav_problems) {
 
         }
 
@@ -337,18 +335,18 @@ public class EditProfile extends AppCompatActivity implements NavigationView.OnN
 
             })
                     .addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception exception) {
-                    progressDialog.dismiss();
-                    // Handle unsuccessful uploads
-                    Toast.makeText(EditProfile.this, "Something went wrong.." + exception.getMessage(), Toast.LENGTH_LONG).show();
-                }
-            })
+                        @Override
+                        public void onFailure(@NonNull Exception exception) {
+                            progressDialog.dismiss();
+                            // Handle unsuccessful uploads
+                            Toast.makeText(EditProfile.this, "Something went wrong.." + exception.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    })
                     .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
                         @Override
                         public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
                             //displaying the upload progress
-                             @SuppressWarnings("VisibleForTests")
+                            @SuppressWarnings("VisibleForTests")
                             double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
                             progressDialog.setMessage("Uploaded " + ((int) progress) + "%...");
                         }
