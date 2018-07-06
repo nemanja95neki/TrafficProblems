@@ -105,7 +105,6 @@
                 android:value="com.elfak.nv.trafficproblems.NavDrawerMain" />
         </activity>
         <activity
-<<<<<<< HEAD
             android:name=".AdministratorsList"
             android:label="@string/title_activity_administrators_list"
             android:parentActivityName=".NavDrawerMain"
@@ -113,13 +112,13 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.elfak.nv.trafficproblems.NavDrawerMain" />
-=======
+        </activity>
+        <activity
             android:name=".ChooseLocationActivity"
             android:label="@string/title_activity_choose_location">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.elfak.nv.trafficproblems.AddProblemActivity" />
->>>>>>> 46de2e06bc2e849ce5895426213c1b39ccab89dc
         </activity>
     </application>
 
