@@ -28,6 +28,16 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="com.example.android.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
@@ -95,6 +105,7 @@
                 android:value="com.elfak.nv.trafficproblems.NavDrawerMain" />
         </activity>
         <activity
+<<<<<<< HEAD
             android:name=".AdministratorsList"
             android:label="@string/title_activity_administrators_list"
             android:parentActivityName=".NavDrawerMain"
@@ -102,6 +113,13 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.elfak.nv.trafficproblems.NavDrawerMain" />
+=======
+            android:name=".ChooseLocationActivity"
+            android:label="@string/title_activity_choose_location">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.elfak.nv.trafficproblems.AddProblemActivity" />
+>>>>>>> 46de2e06bc2e849ce5895426213c1b39ccab89dc
         </activity>
     </application>
 

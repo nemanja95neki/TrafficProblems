@@ -319,18 +319,18 @@ public class EditProfile extends AppCompatActivity implements NavigationView.OnN
 
             })
                     .addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception exception) {
-                    progressDialog.dismiss();
-                    // Handle unsuccessful uploads
-                    Toast.makeText(EditProfile.this, "Something went wrong.." + exception.getMessage(), Toast.LENGTH_LONG).show();
-                }
-            })
+                        @Override
+                        public void onFailure(@NonNull Exception exception) {
+                            progressDialog.dismiss();
+                            // Handle unsuccessful uploads
+                            Toast.makeText(EditProfile.this, "Something went wrong.." + exception.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    })
                     .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
                         @Override
                         public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
                             //displaying the upload progress
-                             @SuppressWarnings("VisibleForTests")
+                            @SuppressWarnings("VisibleForTests")
                             double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
                             progressDialog.setMessage("Uploaded " + ((int) progress) + "%...");
                         }
