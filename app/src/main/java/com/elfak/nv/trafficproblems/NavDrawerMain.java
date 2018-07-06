@@ -87,6 +87,8 @@ public class NavDrawerMain extends AppCompatActivity
         findViewById(R.id.includeActivityProfile).setVisibility(View.INVISIBLE);
         findViewById(R.id.includeActivityEditProfile).setVisibility(View.INVISIBLE);
         findViewById(R.id.includeActivityAdministratorsList).setVisibility(View.INVISIBLE);
+        findViewById(R.id.includeActivityAddProblem).setVisibility(View.INVISIBLE);
+
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(

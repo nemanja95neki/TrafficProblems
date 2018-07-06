@@ -77,6 +77,8 @@ public class AdministratorsList extends AppCompatActivity implements NavigationV
         findViewById(R.id.includeActivityProfile).setVisibility(View.INVISIBLE);
         findViewById(R.id.includeActivityEditProfile).setVisibility(View.INVISIBLE);
         findViewById(R.id.includeMainView).setVisibility(View.INVISIBLE);
+        findViewById(R.id.includeActivityAddProblem).setVisibility(View.INVISIBLE);
+
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(

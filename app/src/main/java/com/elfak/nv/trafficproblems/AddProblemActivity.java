@@ -32,6 +32,8 @@ import android.widget.EditText;
 import android.widget.Filter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -48,7 +50,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class AddProblemActivity extends AppCompatActivity {
+public class AddProblemActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int REQUEST_TAKE_PHOTO = 1;
@@ -58,7 +60,10 @@ public class AddProblemActivity extends AppCompatActivity {
     ImageView mImageView;
     DatabaseReference databaseReference;
     StorageReference mStorageRef;
-
+    private UserAvatarStore userAvatarStore;
+    private Bitmap avatar;
+    private TextView sideMenuEmail, sideMenuName;
+    private ImageView imageSideMenu;
     Uri uri;
 
     User user;
@@ -74,12 +79,38 @@ public class AddProblemActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_add_problem);
+        setContentView(R.layout.activity_nav_drawer_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        UserLocalStore userLogged = new UserLocalStore(this);
+        findViewById(R.id.includeMainView).setVisibility(View.INVISIBLE);
+        findViewById(R.id.includeActivityEditProfile).setVisibility(View.INVISIBLE);
+        findViewById(R.id.includeActivityAdministratorsList).setVisibility(View.INVISIBLE);
+        findViewById(R.id.includeMainView).setVisibility(View.INVISIBLE);
+
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
+        final UserLocalStore userLogged = new UserLocalStore(this);
         user= userLogged.getLoggedInUser();
+        userAvatarStore = new UserAvatarStore(this);
+        avatar = userAvatarStore.getUserAvatar();
+
+
+        View header = navigationView.getHeaderView(0);
+        LinearLayout profileImageOnSideMenu = (LinearLayout)header.findViewById(R.id.viewProfile);
+        sideMenuEmail = profileImageOnSideMenu.findViewById(R.id.textEmail);
+        sideMenuName = profileImageOnSideMenu.findViewById(R.id.textUserName);
+        sideMenuEmail.setText(user.email);
+        sideMenuName.setText(user.first_name + " " + user.last_name);
+        imageSideMenu = (ImageView)profileImageOnSideMenu.findViewById(R.id.imageProfileImage);
 
         mImageView = findViewById(R.id.imageViewProblem);
 
@@ -201,10 +232,53 @@ public class AddProblemActivity extends AppCompatActivity {
                 btnPrior2.setBackgroundColor(0);
             }
         });
+        Menu menuNav = navigationView.getMenu();
+        MenuItem editProfile = menuNav.findItem(R.id.nav_edit_profile);
+        MenuItem logoutUser = menuNav.findItem(R.id.logout);
+
+        logoutUser.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                userLogged.setUserLoggedIn(false);
+                userLogged.clearUserData();
+                userAvatarStore.clearUserData();
+                FirebaseAuth.getInstance().signOut();
+                Intent login = new Intent(AddProblemActivity.this,LoginActivity.class);
+                startActivity(login);
+                return true;
+            }
+        });
+
+        editProfile.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                Intent editProfile = new Intent(AddProblemActivity.this, EditProfile.class);
+                startActivityForResult(editProfile,1);
+                return true;
+            }
+        });
+        profileImageOnSideMenu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Bundle idBundle = new Bundle();
+                idBundle.putInt("case", 1);
+                Intent profile = new Intent(AddProblemActivity.this,Profile.class);
+                profile.putExtras(idBundle);
+                startActivity(profile);
+            }
+        });
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if(avatar!=null) {
+            avatar = userAvatarStore.getUserAvatar();
+            imageSideMenu.setImageBitmap(avatar);
+        }
+    }
 
-    private boolean checkInputs(String name, String desc,Integer prior, String longit, String lat)
+    private boolean checkInputs(String name, String desc, Integer prior, String longit, String lat)
     {
         if (name.isEmpty())
         {
@@ -272,5 +346,23 @@ public class AddProblemActivity extends AppCompatActivity {
         inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
         String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, "Title", null);
         return Uri.parse(path);
+    }
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+
+        if (id == R.id.nav_edit_profile) {
+            // Handle the camera action
+        } else if (id == R.id.nav_friends) {
+
+        } else if (id == R.id.nav_problems) {
+
+        }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
     }
 }
