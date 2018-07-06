@@ -8,15 +8,19 @@
          location permissions for the 'MyLocation' functionality. 
     -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-feature android:name="android.hardware.camera" android:required="true" />
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="true" />
+
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-feature android:name="android.hardware.camera" />
+
     <uses-feature android:name="android.hardware.camera.autofocus" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -57,15 +61,15 @@
             android:label="@string/title_activity_profile"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".editProfile"
+            android:name=".EditProfile"
             android:label="@string/title_activity_edit_profile"
             android:parentActivityName=".Profile"
-            android:theme="@style/AppTheme.NoActionBar">
-        </activity>
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.elfak.nv.trafficproblems.Profile" />
-<!--
+            android:theme="@style/AppTheme.NoActionBar"></activity>
+
+        <meta-data
+            android:name="android.support.PARENT_ACTIVITY"
+            android:value="com.elfak.nv.trafficproblems.Profile" />
+        <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
              Note that the API key is linked to the encryption key used to sign the APK.
@@ -84,6 +88,15 @@
         <activity
             android:name=".AddProblemActivity"
             android:label="@string/title_activity_add_problem"
+            android:parentActivityName=".NavDrawerMain"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.elfak.nv.trafficproblems.NavDrawerMain" />
+        </activity>
+        <activity
+            android:name=".AdministratorsList"
+            android:label="@string/title_activity_administrators_list"
             android:parentActivityName=".NavDrawerMain"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data

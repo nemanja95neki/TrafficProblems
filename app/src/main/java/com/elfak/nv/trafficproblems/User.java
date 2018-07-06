@@ -1,5 +1,7 @@
 package com.elfak.nv.trafficproblems;
 
+import android.graphics.Bitmap;
+
 import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
 
@@ -10,8 +12,11 @@ public class User {
     public String first_name;
     public String last_name;
     public String phone_number;
+    public String role;
     @Exclude
     public String key;
+    @Exclude
+    public String imageUri;
 
     public User() {}
 
@@ -22,6 +27,7 @@ public class User {
         this.first_name = first_name;
         this.last_name = last_name;
         this.phone_number = phone_number;
+        this.role = "user";
     }
     public User(String key, String email,String password,String first_name,String last_name,String phone_number)
     {
@@ -31,7 +37,9 @@ public class User {
         this.first_name = first_name;
         this.last_name = last_name;
         this.phone_number = phone_number;
+        this.role = "user";
     }
+
 
     public String getEmail() {
         return email;
@@ -52,4 +60,6 @@ public class User {
     public String getPhone_number() {
         return phone_number;
     }
+    public String get_Picture(){return imageUri;}
+
 }

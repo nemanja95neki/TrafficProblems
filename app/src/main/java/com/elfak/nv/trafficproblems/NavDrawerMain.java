@@ -86,6 +86,7 @@ public class NavDrawerMain extends AppCompatActivity
         firstLoad = true;
         findViewById(R.id.includeActivityProfile).setVisibility(View.INVISIBLE);
         findViewById(R.id.includeActivityEditProfile).setVisibility(View.INVISIBLE);
+        findViewById(R.id.includeActivityAdministratorsList).setVisibility(View.INVISIBLE);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -101,6 +102,15 @@ public class NavDrawerMain extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 startNewProblemActivity();
+            }
+        });
+
+        Button btnAdministrators = findViewById(R.id.buttonAdministrators);
+        btnAdministrators.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(NavDrawerMain.this,AdministratorsList.class);
+                startActivity(i);
             }
         });
 
@@ -139,7 +149,10 @@ public class NavDrawerMain extends AppCompatActivity
         profileImageOnSideMenu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Bundle idBundle = new Bundle();
+                idBundle.putInt("case", 1);
                 Intent profile = new Intent(NavDrawerMain.this,Profile.class);
+                profile.putExtras(idBundle);
                 startActivity(profile);
             }
         });
@@ -235,13 +248,11 @@ public class NavDrawerMain extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
+        if (id == R.id.nav_edit_profile) {
             // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
+        } else if (id == R.id.nav_friends) {
 
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_share) {
+        } else if (id == R.id.nav_problems) {
 
         }
 
