@@ -29,10 +29,7 @@
     <string name="title_activity_main2">Main2Activity</string>
     <string name="title_activity_administrators_list">AdministratorsList</string>
     <string name="title_activity_choose_location">Map</string>
-<<<<<<< HEAD
     <string name="title_activity_problems_list">ProblemsList</string>
     <string name="title_for_problem_lists">Problem</string>
-=======
     <string name="title_activity_view_problem">ViewProblemActivity</string>
->>>>>>> d885bdef076ce2ff4e51592b686075123479fe9c
 </resources>

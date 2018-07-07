@@ -1,5 +1,6 @@
 package com.elfak.nv.trafficproblems;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -9,8 +10,11 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -18,12 +22,17 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.format.DateUtils;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -41,7 +50,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ViewProblemActivity extends AppCompatActivity {
+public class ViewProblemActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
 
     private List<Comment> commentList = new ArrayList<>();
@@ -50,7 +59,7 @@ public class ViewProblemActivity extends AppCompatActivity {
     FirebaseDatabase database;
     DatabaseReference ref;
     StorageReference mStorageRef;
-
+    private String problem_key="";
 
     Problem loadedProblem;
     User logedUser;
@@ -59,11 +68,38 @@ public class ViewProblemActivity extends AppCompatActivity {
     TextView txtDescription,txtProblemName,txtUserName, txtComment,txtTime;
     ImageView imageProblem,imagePriority;
 
+    private UserLocalStore userLocalStore;
+    private UserAvatarStore userAvatarStore;
+    private Bitmap avatar;
+    private User userInfo;
+    private TextView sideMenuEmail, sideMenuName;
+    private ImageView imageSideMenu;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_view_problem);
+        setContentView(R.layout.activity_nav_drawer_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        findViewById(R.id.includeMainView).setVisibility(View.INVISIBLE);
+        findViewById(R.id.includeActivityEditProfile).setVisibility(View.INVISIBLE);
+        findViewById(R.id.includeActivityAdministratorsList).setVisibility(View.INVISIBLE);
+        findViewById(R.id.includeActivityAddProblem).setVisibility(View.INVISIBLE);
+        findViewById(R.id.includeActivityProfile).setVisibility(View.INVISIBLE);
+        findViewById(R.id.includeActivityProblemsList).setVisibility(View.INVISIBLE);
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setTitle("Problem details");
+
         txtProblemName=findViewById(R.id.textView3);
         txtDescription= findViewById(R.id.textDesc2);
         txtUserName = findViewById(R.id.textView4);
@@ -71,6 +107,19 @@ public class ViewProblemActivity extends AppCompatActivity {
         imagePriority=findViewById(R.id.imageView2);
         txtComment=findViewById(R.id.editText2);
         txtTime = findViewById(R.id.textView5);
+
+        userLocalStore = new UserLocalStore(this);
+        userInfo = userLocalStore.getLoggedInUser();
+        userAvatarStore = new UserAvatarStore(this);
+        avatar = userAvatarStore.getUserAvatar();
+
+        View header = navigationView.getHeaderView(0);
+        LinearLayout profileImageOnSideMenu = (LinearLayout)header.findViewById(R.id.viewProfile);
+        sideMenuEmail = profileImageOnSideMenu.findViewById(R.id.textEmail);
+        sideMenuName = profileImageOnSideMenu.findViewById(R.id.textUserName);
+        sideMenuEmail.setText(userInfo.email);
+        sideMenuName.setText(userInfo.first_name + " " + userInfo.last_name);
+        imageSideMenu = (ImageView)profileImageOnSideMenu.findViewById(R.id.imageProfileImage);
 
         final UserLocalStore userLogged = new UserLocalStore(this);
         logedUser= userLogged.getLoggedInUser();
@@ -80,52 +129,98 @@ public class ViewProblemActivity extends AppCompatActivity {
         mStorageRef = FirebaseStorage.getInstance().getReference();
 
 
-
-        //prosledjen kljuc problema
-        ref.child("problems").child("-LG_CExmSitIQyTCbByZ").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                String loadedProblemKey =dataSnapshot.getKey();
-                loadedProblem = dataSnapshot.getValue(Problem.class);
-                loadedProblem.key=loadedProblemKey;
-                try {
-                    showData();
-                } catch (IOException e) {
-                    e.printStackTrace();
+        try{
+            Intent listIntent = getIntent();
+            Bundle bundle = listIntent.getExtras();
+            problem_key = bundle.getString("problem_id");
+        }
+        catch (Exception e){
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+            finish();
+        }
+        if(problem_key!="") {
+            //prosledjen kljuc problema
+            ref.child("problems").child(problem_key).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    String loadedProblemKey = dataSnapshot.getKey();
+                    loadedProblem = dataSnapshot.getValue(Problem.class);
+                    loadedProblem.key = loadedProblemKey;
+                    try {
+                        showData();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
-            }
 
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+
+
+            recyclerView = findViewById(R.id.recycler_view);
+
+            mAdapter = new CommentsAdapter(commentList);
+            RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
+            recyclerView.setLayoutManager(mLayoutManager);
+            recyclerView.setItemAnimator(new DefaultItemAnimator());
+            recyclerView.setAdapter(mAdapter);
+
+
+            findViewById(R.id.sendBtn).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    String commentText = txtComment.getText().toString();
+
+                    if (commentText == null && commentText.isEmpty())
+                        return;
+                    String key = ref.push().getKey();
+                    Comment newComment = new Comment(commentText, logedUser.key);
+                    ref.child("comments").child(loadedProblem.key).child(key).setValue(newComment);
+                    newComment.key = key;
+                    //commentList.add(newComment);
+
+                    //DateUtils.getRelativeTimeSpanString(your_time_in_milliseconds, current_ time_in_millisecinds,DateUtils.MINUTE_IN_MILLIS);
+                }
+            });
+        }
+
+        Menu menuNav = navigationView.getMenu();
+        MenuItem editProfile = menuNav.findItem(R.id.nav_edit_profile);
+        MenuItem logoutUser = menuNav.findItem(R.id.logout);
+
+        logoutUser.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
+            public boolean onMenuItemClick(MenuItem item) {
+                userLocalStore.setUserLoggedIn(false);
+                userLocalStore.clearUserData();
+                userAvatarStore.clearUserData();
+                FirebaseAuth.getInstance().signOut();
+                Intent login = new Intent(ViewProblemActivity.this,LoginActivity.class);
+                startActivity(login);
+                return true;
             }
         });
 
-
-        recyclerView = findViewById(R.id.recycler_view);
-
-        mAdapter = new CommentsAdapter(commentList);
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
-        recyclerView.setLayoutManager(mLayoutManager);
-        recyclerView.setItemAnimator(new DefaultItemAnimator());
-        recyclerView.setAdapter(mAdapter);
-
-
-        findViewById(R.id.sendBtn).setOnClickListener(new View.OnClickListener() {
+        editProfile.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                Intent editProfile = new Intent(ViewProblemActivity.this, EditProfile.class);
+                startActivityForResult(editProfile,1);
+                return true;
+            }
+        });
+        profileImageOnSideMenu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                String commentText=  txtComment.getText().toString();
-
-                if(commentText==null && commentText.isEmpty())
-                    return;
-                String key= ref.push().getKey();
-                Comment newComment = new Comment(commentText,logedUser.key);
-                ref.child("comments").child(loadedProblem.key).child(key).setValue(newComment);
-                newComment.key=key;
-                //commentList.add(newComment);
-
-                //DateUtils.getRelativeTimeSpanString(your_time_in_milliseconds, current_ time_in_millisecinds,DateUtils.MINUTE_IN_MILLIS);
+                Bundle idBundle = new Bundle();
+                idBundle.putInt("case", 1);
+                Intent profile = new Intent(ViewProblemActivity.this,Profile.class);
+                profile.putExtras(idBundle);
+                startActivity(profile);
             }
         });
 
@@ -246,5 +341,31 @@ public class ViewProblemActivity extends AppCompatActivity {
     }
 
 
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
 
+        if (id == R.id.nav_edit_profile) {
+            // Handle the camera action
+        } else if (id == R.id.nav_friends) {
+
+        } else if (id == R.id.nav_problems) {
+
+        }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if(avatar!=null) {
+            avatar = userAvatarStore.getUserAvatar();
+            imageSideMenu.setImageBitmap(avatar);
+        }
+    }
 }

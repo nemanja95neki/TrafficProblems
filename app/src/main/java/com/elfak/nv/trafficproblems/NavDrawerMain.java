@@ -88,7 +88,8 @@ public class NavDrawerMain extends AppCompatActivity
         findViewById(R.id.includeActivityEditProfile).setVisibility(View.INVISIBLE);
         findViewById(R.id.includeActivityAdministratorsList).setVisibility(View.INVISIBLE);
         findViewById(R.id.includeActivityAddProblem).setVisibility(View.INVISIBLE);
-
+        findViewById(R.id.includeActivityProblemsList).setVisibility(View.INVISIBLE);
+        findViewById(R.id.includeActivityViewProblem).setVisibility(View.INVISIBLE);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -116,7 +117,7 @@ public class NavDrawerMain extends AppCompatActivity
             }
         });
         Button btnProblems = findViewById(R.id.buttonProblems);
-        btnAdministrators.setOnClickListener(new View.OnClickListener() {
+        btnProblems.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent i = new Intent(NavDrawerMain.this,ProblemsList.class);

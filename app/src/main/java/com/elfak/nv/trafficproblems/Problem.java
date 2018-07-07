@@ -15,6 +15,8 @@ public class Problem {
     public Long time;
     @Exclude
     public String key;
+    @Exclude
+    public String imageUri;
 
     public Problem(){}
 
@@ -29,4 +31,5 @@ public class Problem {
         this.priority=priority;
         time= System.currentTimeMillis();
     }
+    public String get_Picture(){return imageUri;}
 }

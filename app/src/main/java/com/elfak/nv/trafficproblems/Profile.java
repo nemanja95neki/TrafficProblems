@@ -79,7 +79,8 @@ public class Profile extends AppCompatActivity implements NavigationView.OnNavig
         findViewById(R.id.includeActivityEditProfile).setVisibility(View.INVISIBLE);
         findViewById(R.id.includeActivityAdministratorsList).setVisibility(View.INVISIBLE);
         findViewById(R.id.includeActivityAddProblem).setVisibility(View.INVISIBLE);
-
+        findViewById(R.id.includeActivityProblemsList).setVisibility(View.INVISIBLE);
+        findViewById(R.id.includeActivityViewProblem).setVisibility(View.INVISIBLE);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
