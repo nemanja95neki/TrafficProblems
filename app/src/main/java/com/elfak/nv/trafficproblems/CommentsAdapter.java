@@ -2,6 +2,7 @@ package com.elfak.nv.trafficproblems;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.health.TimerStat;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
@@ -22,6 +23,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,9 +36,10 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.Commen
 
 
     public CommentsAdapter(List<Comment> comments) {
+
         commentList = comments;
     }
-
+    public String uriPicture="";
 
     @NonNull
     @Override
@@ -51,22 +54,45 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.Commen
 
     @Override
     public void onBindViewHolder(@NonNull final CommentViewHolder holder, int position) {
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
         Comment comment = commentList.get(position);
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+        StorageReference mStorageRef = FirebaseStorage.getInstance().getReference();
+        StorageReference problemImage = mStorageRef.child("Avatars").child(comment.userId);
+        problemImage.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+            @Override
+            public void onSuccess(Uri uri) {
+                //pPicasso.get().load(uri).into(picture);
+                uriPicture = uri.toString();
+                Picasso.get().load(uriPicture).into(holder.profileImage);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Handle any errors
+            }
+        });
 
 
         ref.child("users").child(comment.userId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                User loadedUser = dataSnapshot.getValue(User.class);
+
+
+                final User loadedUser = dataSnapshot.getValue(User.class);
                 holder.userNameLastName.setText(loadedUser.first_name+" "+loadedUser.last_name);
+
+
+
             }
+
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError)                                        {
 
             }
         });
+
+
         Long currentTime = System.currentTimeMillis();
         //DateUtils.getRelativeTimeSpanString(comment.time, currentTime,DateUtils.MINUTE_IN_MILLIS);
         holder.timeAgo.setText(DateUtils.getRelativeTimeSpanString(comment.time, currentTime,DateUtils.SECOND_IN_MILLIS).toString());

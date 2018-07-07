@@ -12,6 +12,7 @@ public class Problem {
     public String latitude;
     public Integer priority;
     public String userId;
+    public Integer solved;
     public Long time;
     @Exclude
     public String key;
@@ -30,6 +31,8 @@ public class Problem {
         this.userId=userId;
         this.priority=priority;
         time= System.currentTimeMillis();
+        solved=0;
     }
+
     public String get_Picture(){return imageUri;}
 }
