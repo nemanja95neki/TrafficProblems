@@ -149,10 +149,10 @@ public class ViewProblemActivity extends AppCompatActivity {
         }
 
         setImage();
-        /*Long currentTime = System.currentTimeMillis();
+        Long currentTime = System.currentTimeMillis();
         txtTime.setText(DateUtils.getRelativeTimeSpanString(loadedProblem.time, currentTime,
                 DateUtils.SECOND_IN_MILLIS,
-                DateUtils.FORMAT_NO_NOON));*/
+                DateUtils.FORMAT_NO_NOON));
 
         ref.child("users").child(loadedProblem.userId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override

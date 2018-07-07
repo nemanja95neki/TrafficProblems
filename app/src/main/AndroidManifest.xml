@@ -105,6 +105,15 @@
                 android:value="com.elfak.nv.trafficproblems.NavDrawerMain" />
         </activity>
         <activity
+            android:name=".AdministratorsList"
+            android:label="@string/title_activity_administrators_list"
+            android:parentActivityName=".NavDrawerMain"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.elfak.nv.trafficproblems.NavDrawerMain" />
+        </activity>
+        <activity
             android:name=".ChooseLocationActivity"
             android:label="@string/title_activity_choose_location">
             <meta-data

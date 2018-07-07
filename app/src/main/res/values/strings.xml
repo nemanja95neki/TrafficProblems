@@ -14,6 +14,7 @@
     <string name="profile_friends">Friends: </string>
     <string name="profile_posts">Posts: </string>
     <string name="profile_rank">Rank: </string>
+    <string name="open_profile">Open profile: </string>
     <string name="title_activity_edit_profile">editProfile</string>
     <string name="title_activity_profile_menu">ProfileMenu</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
@@ -26,6 +27,7 @@
     <string name="title_activity_nav_drawer_main">NavDrawerMain</string>
     <string name="title_activity_add_problem">AddProblemActivity</string>
     <string name="title_activity_main2">Main2Activity</string>
+    <string name="title_activity_administrators_list">AdministratorsList</string>
     <string name="title_activity_choose_location">Map</string>
     <string name="title_activity_view_problem">ViewProblemActivity</string>
 </resources>

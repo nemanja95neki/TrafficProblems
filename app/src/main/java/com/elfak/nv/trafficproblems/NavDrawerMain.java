@@ -86,6 +86,9 @@ public class NavDrawerMain extends AppCompatActivity
         firstLoad = true;
         findViewById(R.id.includeActivityProfile).setVisibility(View.INVISIBLE);
         findViewById(R.id.includeActivityEditProfile).setVisibility(View.INVISIBLE);
+        findViewById(R.id.includeActivityAdministratorsList).setVisibility(View.INVISIBLE);
+        findViewById(R.id.includeActivityAddProblem).setVisibility(View.INVISIBLE);
+
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -104,12 +107,11 @@ public class NavDrawerMain extends AppCompatActivity
             }
         });
 
-
-        findViewById(R.id.button4).setOnClickListener(new View.OnClickListener(){
-
+        Button btnAdministrators = findViewById(R.id.buttonAdministrators);
+        btnAdministrators.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i = new Intent(NavDrawerMain.this,ViewProblemActivity.class);
+                Intent i = new Intent(NavDrawerMain.this,AdministratorsList.class);
                 startActivity(i);
             }
         });
@@ -149,7 +151,10 @@ public class NavDrawerMain extends AppCompatActivity
         profileImageOnSideMenu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Bundle idBundle = new Bundle();
+                idBundle.putInt("case", 1);
                 Intent profile = new Intent(NavDrawerMain.this,Profile.class);
+                profile.putExtras(idBundle);
                 startActivity(profile);
             }
         });
