@@ -60,12 +60,13 @@ public class ViewProblemActivity extends AppCompatActivity implements Navigation
     DatabaseReference ref;
     StorageReference mStorageRef;
     private String problem_key="";
+    String uriPicture="";
 
     Problem loadedProblem;
     User logedUser;
     User usersProblem;
 
-    TextView txtDescription,txtProblemName,txtUserName, txtComment,txtTime;
+    TextView txtDescription,txtProblemName,txtUserName, txtComment,txtTime, txtSolved;
     ImageView imageProblem,imagePriority;
 
     private UserLocalStore userLocalStore;
@@ -74,6 +75,7 @@ public class ViewProblemActivity extends AppCompatActivity implements Navigation
     private User userInfo;
     private TextView sideMenuEmail, sideMenuName;
     private ImageView imageSideMenu;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,6 +109,7 @@ public class ViewProblemActivity extends AppCompatActivity implements Navigation
         imagePriority=findViewById(R.id.imageView2);
         txtComment=findViewById(R.id.editText2);
         txtTime = findViewById(R.id.textView5);
+        txtSolved = findViewById(R.id.textView6);
 
         userLocalStore = new UserLocalStore(this);
         userInfo = userLocalStore.getLoggedInUser();
@@ -175,13 +178,21 @@ public class ViewProblemActivity extends AppCompatActivity implements Navigation
 
                     String commentText = txtComment.getText().toString();
 
-                    if (commentText == null && commentText.isEmpty())
+                    if (commentText == null || commentText.isEmpty())
                         return;
-                    String key = ref.push().getKey();
-                    Comment newComment = new Comment(commentText, logedUser.key);
-                    ref.child("comments").child(loadedProblem.key).child(key).setValue(newComment);
-                    newComment.key = key;
-                    //commentList.add(newComment);
+                    else {
+                        String key = ref.push().getKey();
+                        Comment newComment = new Comment(commentText, logedUser.key);
+                        ref.child("comments").child(loadedProblem.key).child(key).setValue(newComment);
+                            newComment.key = key;
+                            Toast.makeText(ViewProblemActivity.this, "Comment added!", Toast.LENGTH_SHORT).show();
+                            txtComment.setText("");
+                            commentList.add(newComment);
+                            mAdapter.notifyDataSetChanged();
+
+
+                    }
+
 
                     //DateUtils.getRelativeTimeSpanString(your_time_in_milliseconds, current_ time_in_millisecinds,DateUtils.MINUTE_IN_MILLIS);
                 }
@@ -230,6 +241,10 @@ public class ViewProblemActivity extends AppCompatActivity implements Navigation
     private void showData() throws IOException {
         txtProblemName.setText(loadedProblem.problemName);
         txtDescription.setText(loadedProblem.problemDescription);
+        if(loadedProblem.solved==1)
+            txtSolved.setText("Solved!");
+        else
+            txtSolved.setText("Not Solved!");
         switch (loadedProblem.priority){
             case 1:
                 imagePriority.setImageResource(R.drawable.ic_priority_5);
@@ -304,9 +319,9 @@ public class ViewProblemActivity extends AppCompatActivity implements Navigation
     }
 
     private void setImage() throws IOException {
-        final File localFile = File.createTempFile("images", "jpg");
+
         final StorageReference problemImage = mStorageRef.child("Problems").child(loadedProblem.key);
-        problemImage.getFile(localFile)
+        /*problemImage.getFile(localFile)
                 .addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
                     @Override
                     public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
@@ -319,6 +334,20 @@ public class ViewProblemActivity extends AppCompatActivity implements Navigation
             public void onFailure(@NonNull Exception exception) {
                 // Handle failed download
                 // Toast.makeText(getApplicationContext(),"Something went wrong, couldn't download profile picture",Toast.LENGTH_LONG).show();
+            }
+        });*/
+
+        problemImage.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+            @Override
+            public void onSuccess(Uri uri) {
+                //pPicasso.get().load(uri).into(picture);
+                uriPicture = uri.toString();
+                Picasso.get().load(uriPicture).into(imageProblem);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Handle any errors
             }
         });
     }
