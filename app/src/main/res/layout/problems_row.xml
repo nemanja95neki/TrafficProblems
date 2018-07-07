@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cardBackgroundColor="@color/white"
+    app:cardCornerRadius="3dp"
+    app:cardElevation="3dp"
+    app:contentPadding="5dp"
+    app:cardUseCompatPadding="true">
+
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/admin_image_view"
+            android:layout_width="145dp"
+            android:layout_height="140dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/loading"
+            android:scaleType="centerCrop"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/problem_show_on_map"
+            app:layout_constraintStart_toEndOf="@+id/saiving_user_id"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/title_problems_list"
+            android:layout_width="wrap_content"
+            android:layout_height="21dp"
+            android:layout_marginBottom="5dp"
+            android:layout_marginEnd="90dp"
+            android:layout_marginLeft="75dp"
+            android:layout_marginRight="90dp"
+            android:layout_marginStart="75dp"
+            android:layout_marginTop="7dp"
+            android:text="@string/title_for_problem_lists"
+            android:textColor="#000"
+            android:textSize="15dp"
+            app:layout_constraintBottom_toTopOf="@+id/open_profile"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/admin_image_view"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageButton
+            android:id="@+id/problem_show_on_map"
+            android:layout_width="170dp"
+            android:layout_height="35dp"
+            android:layout_marginEnd="30dp"
+            android:layout_marginLeft="21dp"
+            android:layout_marginRight="30dp"
+            android:layout_marginStart="21dp"
+            android:layout_marginTop="5dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/rounded_button_gray"
+            android:paddingBottom="10dp"
+            android:paddingLeft="10dp"
+            android:paddingTop="10dp"
+            android:scaleType="fitStart"
+            android:src="@drawable/open_profile_icon"
+            app:layout_constraintBottom_toTopOf="@+id/problem_details"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toEndOf="@+id/admin_image_view"
+            app:layout_constraintTop_toBottomOf="@+id/title_problems_list" />
+
+        <ImageButton
+            android:id="@+id/problem_details"
+            android:layout_width="170dp"
+            android:layout_height="35dp"
+            android:layout_marginEnd="30dp"
+            android:layout_marginLeft="21dp"
+            android:layout_marginRight="30dp"
+            android:layout_marginStart="21dp"
+            android:layout_marginTop="5dp"
+            android:adjustViewBounds="true"
+            android:background="@drawable/rounded_button_gray"
+            android:paddingBottom="10dp"
+            android:paddingLeft="10dp"
+            android:paddingTop="10dp"
+            android:scaleType="fitStart"
+            android:src="@drawable/open_profile_icon"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/admin_image_view"
+            app:layout_constraintTop_toBottomOf="@+id/problem_show_on_map" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:clickable="false"
+            android:text="Details"
+            android:textSize="15dp"
+            app:layout_constraintBottom_toBottomOf="@+id/problem_details"
+            app:layout_constraintEnd_toEndOf="@+id/problem_details"
+            app:layout_constraintStart_toStartOf="@+id/problem_details"
+            app:layout_constraintTop_toTopOf="@+id/problem_details" />
+
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:clickable="false"
+            android:text="Show on map"
+            android:textSize="15dp"
+            app:layout_constraintBottom_toBottomOf="@+id/problem_show_on_map"
+            app:layout_constraintEnd_toEndOf="@+id/problem_show_on_map"
+            app:layout_constraintStart_toStartOf="@+id/problem_show_on_map"
+            app:layout_constraintTop_toTopOf="@+id/problem_show_on_map" />
+
+        <TextView
+            android:id="@+id/saiving_user_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="invisible" />
+
+    </android.support.constraint.ConstraintLayout>
+
+</android.support.v7.widget.CardView>

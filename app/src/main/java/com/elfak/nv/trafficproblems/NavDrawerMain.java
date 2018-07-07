@@ -115,6 +115,14 @@ public class NavDrawerMain extends AppCompatActivity
                 startActivity(i);
             }
         });
+        Button btnProblems = findViewById(R.id.buttonProblems);
+        btnAdministrators.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(NavDrawerMain.this,ProblemsList.class);
+                startActivity(i);
+            }
+        });
 
         View header = navigationView.getHeaderView(0);
         LinearLayout profileImageOnSideMenu = (LinearLayout)header.findViewById(R.id.viewProfile);

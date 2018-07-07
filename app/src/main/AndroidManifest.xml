@@ -74,7 +74,7 @@
             android:name=".EditProfile"
             android:label="@string/title_activity_edit_profile"
             android:parentActivityName=".Profile"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
 
         <meta-data
             android:name="android.support.PARENT_ACTIVITY"
@@ -119,6 +119,15 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.elfak.nv.trafficproblems.AddProblemActivity" />
+        </activity>
+        <activity
+            android:name=".ProblemsList"
+            android:label="@string/title_activity_problems_list"
+            android:parentActivityName=".NavDrawerMain"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.elfak.nv.trafficproblems.NavDrawerMain" />
         </activity>
     </application>
 
