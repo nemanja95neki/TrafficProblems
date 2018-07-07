@@ -15,7 +15,7 @@
         <item
             android:id="@+id/nav_problems"
             android:icon="@drawable/ic_view_list"
-            android:title="Problems" />
+            android:title="My Problems" />
         <item android:title="Control">
             <menu>
                 <item

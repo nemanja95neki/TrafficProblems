@@ -13,6 +13,7 @@ public class Problem {
     public Integer priority;
     public String userId;
     public Long time;
+    public int solved;
     @Exclude
     public String key;
     @Exclude

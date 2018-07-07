@@ -66,7 +66,7 @@
             android:paddingLeft="10dp"
             android:paddingTop="10dp"
             android:scaleType="fitStart"
-            android:src="@drawable/open_profile_icon"
+            android:src="@drawable/map_icon"
             app:layout_constraintBottom_toTopOf="@+id/problem_details"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/problem_image"
@@ -105,6 +105,7 @@
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
             android:clickable="false"
+            android:id="@+id/problem_details_text_for_button"
             android:text="Details"
             android:textSize="15dp"
             app:layout_constraintBottom_toBottomOf="@+id/problem_details"
@@ -113,7 +114,7 @@
             app:layout_constraintTop_toTopOf="@+id/problem_details" />
 
         <TextView
-            android:id="@+id/textView3"
+            android:id="@+id/problem_show_on_map_text_for_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"

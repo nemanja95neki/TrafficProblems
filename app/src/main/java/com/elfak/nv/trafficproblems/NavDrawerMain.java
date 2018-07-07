@@ -120,8 +120,22 @@ public class NavDrawerMain extends AppCompatActivity
         btnProblems.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i = new Intent(NavDrawerMain.this,ProblemsList.class);
-                startActivity(i);
+                Bundle idBundle = new Bundle();
+                idBundle.putInt("case",1);
+                Intent intent = new Intent(NavDrawerMain.this, ProblemsList.class);
+                intent.putExtras(idBundle);
+                startActivity(intent);
+            }
+        });
+        Button btnSolvedProblems = findViewById(R.id.buttonSolvedProblems);
+        btnSolvedProblems.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Bundle idBundle = new Bundle();
+                idBundle.putInt("case",2);
+                Intent intent = new Intent(NavDrawerMain.this, ProblemsList.class);
+                intent.putExtras(idBundle);
+                startActivity(intent);
             }
         });
 

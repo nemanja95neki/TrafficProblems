@@ -29,6 +29,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -59,12 +60,23 @@ public class ProblemsList extends AppCompatActivity implements NavigationView.On
     private User userInfo;
     private TextView sideMenuEmail, sideMenuName;
     private ImageView imageSideMenu;
+    private int problemsCase = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_nav_drawer_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        try{
+            Intent listIntent = getIntent();
+            Bundle bundle = listIntent.getExtras();
+            problemsCase = bundle.getInt("case");
+        }
+        catch (Exception e){
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+            finish();
+        }
 
         findViewById(R.id.includeMainView).setVisibility(View.INVISIBLE);
         findViewById(R.id.includeActivityEditProfile).setVisibility(View.INVISIBLE);
@@ -109,7 +121,10 @@ public class ProblemsList extends AppCompatActivity implements NavigationView.On
         listData = new ArrayList<>();
         adapter =  new MyAdapter(listData);
         mFirebaseDatabase = FirebaseDatabase.getInstance();
-        GetDataFirebase();
+        if(problemsCase==1)
+            GetDataFirebaseProblems();
+        else
+            GetDataFirebaseSolvedProblems();
 
         Menu menuNav = navigationView.getMenu();
         MenuItem editProfile = menuNav.findItem(R.id.nav_edit_profile);
@@ -148,13 +163,14 @@ public class ProblemsList extends AppCompatActivity implements NavigationView.On
         });
     }
 
-    void GetDataFirebase()
+    void GetDataFirebaseProblems()
     {
         mRef = mFirebaseDatabase.getReference("problems");
         mRef.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 final Problem data = dataSnapshot.getValue(Problem.class);
+                if(data.solved == 0) {
                     String key = dataSnapshot.getKey();
                     data.key = key;
                     uriPicture = "";
@@ -174,6 +190,58 @@ public class ProblemsList extends AppCompatActivity implements NavigationView.On
                             // Handle any errors
                         }
                     });
+                }
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+    void GetDataFirebaseSolvedProblems()
+    {
+        mRef = mFirebaseDatabase.getReference("problems");
+        mRef.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                final Problem data = dataSnapshot.getValue(Problem.class);
+                if(data.solved == 1) {
+                    String key = dataSnapshot.getKey();
+                    data.key = key;
+                    uriPicture = "";
+                    StorageReference profileRef = mStorageRef.child("Problems").child(key);
+                    profileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            //pPicasso.get().load(uri).into(picture);
+                            uriPicture = uri.toString();
+                            data.imageUri = uriPicture;
+                            listData.add(data);
+                            mRecyclerView.setAdapter(adapter);
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception exception) {
+                            // Handle any errors
+                        }
+                    });
+                }
             }
 
             @Override
@@ -245,7 +313,7 @@ public class ProblemsList extends AppCompatActivity implements NavigationView.On
                     DateUtils.FORMAT_NO_NOON));
         }
         public class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
-            TextView problem_name,saving_problem_id,time_ago;
+            TextView problem_name,saving_problem_id,time_ago,problem_show_on_map_text_for_button;
             ImageView problem_picture;
             ImageButton problem_show_on_map,problem_details;
             public MyViewHolder(View itemView) {
@@ -256,8 +324,14 @@ public class ProblemsList extends AppCompatActivity implements NavigationView.On
                 problem_details = itemView.findViewById(R.id.problem_details);
                 saving_problem_id = itemView.findViewById(R.id.saving_problem_id);
                 time_ago = itemView.findViewById(R.id.problem_time_ago);
-
-                problem_show_on_map.setOnClickListener(this);
+                problem_show_on_map_text_for_button = itemView.findViewById(R.id.problem_show_on_map_text_for_button);
+                if(problemsCase == 2)
+                {
+                    problem_show_on_map.setImageResource(R.drawable.correct_icon);
+                    problem_show_on_map_text_for_button.setText("Problem solved");
+                }
+                if(problemsCase == 1)
+                    problem_show_on_map.setOnClickListener(this);
                 problem_details.setOnClickListener(this);
             }
 
