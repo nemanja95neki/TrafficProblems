@@ -14,7 +14,6 @@ public class Problem {
     public String userId;
     public Integer solved;
     public Long time;
-    public int solved;
     @Exclude
     public String key;
     @Exclude

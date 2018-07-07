@@ -123,13 +123,30 @@ public class ProblemsList extends AppCompatActivity implements NavigationView.On
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         if(problemsCase==1)
             GetDataFirebaseProblems();
-        else
+        else if (problemsCase == 2)
             GetDataFirebaseSolvedProblems();
+        else if (problemsCase == 3)
+            GetDataFirebaseMyProblems();
 
         Menu menuNav = navigationView.getMenu();
         MenuItem editProfile = menuNav.findItem(R.id.nav_edit_profile);
         MenuItem logoutUser = menuNav.findItem(R.id.logout);
+        MenuItem myProblems = menuNav.findItem(R.id.nav_problems);
 
+        if(problemsCase == 1 || problemsCase == 2) {
+            myProblems.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+                    Bundle idBundle = new Bundle();
+                    idBundle.putInt("case", 3);
+                    idBundle.putString("user_id", userInfo.key);
+                    Intent intent = new Intent(ProblemsList.this, ProblemsList.class);
+                    intent.putExtras(idBundle);
+                    startActivity(intent);
+                    return true;
+                }
+            });
+        }
         logoutUser.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
@@ -265,6 +282,57 @@ public class ProblemsList extends AppCompatActivity implements NavigationView.On
             }
         });
     }
+    void GetDataFirebaseMyProblems()
+    {
+        mRef = mFirebaseDatabase.getReference("problems");
+        mRef.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                final Problem data = dataSnapshot.getValue(Problem.class);
+                if(data.userId.equals(userInfo.key)) {
+                    String key = dataSnapshot.getKey();
+                    data.key = key;
+                    uriPicture = "";
+                    StorageReference profileRef = mStorageRef.child("Problems").child(key);
+                    profileRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            //pPicasso.get().load(uri).into(picture);
+                            uriPicture = uri.toString();
+                            data.imageUri = uriPicture;
+                            listData.add(data);
+                            mRecyclerView.setAdapter(adapter);
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception exception) {
+                            // Handle any errors
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
@@ -311,6 +379,15 @@ public class ProblemsList extends AppCompatActivity implements NavigationView.On
             holder.time_ago.setText(DateUtils.getRelativeTimeSpanString(data.time, currentTime,
                     DateUtils.SECOND_IN_MILLIS,
                     DateUtils.FORMAT_NO_NOON));
+            if(problemsCase == 3)
+            {
+                if(data.solved == 1)
+                {
+                    holder.problem_show_on_map.setImageResource(R.drawable.correct_icon);
+                    holder.problem_show_on_map_text_for_button.setText("Problem solved");
+                    holder.problem_show_on_map.setOnClickListener(null);
+                }
+            }
         }
         public class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
             TextView problem_name,saving_problem_id,time_ago,problem_show_on_map_text_for_button;
@@ -330,7 +407,7 @@ public class ProblemsList extends AppCompatActivity implements NavigationView.On
                     problem_show_on_map.setImageResource(R.drawable.correct_icon);
                     problem_show_on_map_text_for_button.setText("Problem solved");
                 }
-                if(problemsCase == 1)
+                if(problemsCase == 1 || problemsCase == 3)
                     problem_show_on_map.setOnClickListener(this);
                 problem_details.setOnClickListener(this);
             }
