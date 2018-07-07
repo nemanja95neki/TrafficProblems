@@ -12,6 +12,7 @@ public class Problem {
     public String latitude;
     public Integer priority;
     public String userId;
+    public Long time;
     @Exclude
     public String key;
 
@@ -26,5 +27,6 @@ public class Problem {
         this.latitude=latitude;
         this.userId=userId;
         this.priority=priority;
+        time= System.currentTimeMillis();
     }
 }

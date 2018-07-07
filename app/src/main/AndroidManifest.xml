@@ -121,6 +121,7 @@
                 android:value="com.elfak.nv.trafficproblems.AddProblemActivity" />
         </activity>
         <activity
+<<<<<<< HEAD
             android:name=".ProblemsList"
             android:label="@string/title_activity_problems_list"
             android:parentActivityName=".NavDrawerMain"
@@ -129,6 +130,11 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.elfak.nv.trafficproblems.NavDrawerMain" />
         </activity>
+=======
+            android:name=".ViewProblemActivity"
+            android:label="@string/title_activity_view_problem"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"></activity>
+>>>>>>> d885bdef076ce2ff4e51592b686075123479fe9c
     </application>
 
 </manifest>
