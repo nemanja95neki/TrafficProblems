@@ -2,11 +2,13 @@ package com.elfak.nv.trafficproblems;
 
 import android.Manifest;
 import android.app.LauncherActivity;
+import android.app.PendingIntent;
 import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
@@ -18,6 +20,8 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -34,12 +38,27 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingClient;
+import com.google.android.gms.location.GeofencingRequest;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -67,9 +86,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class NavDrawerMain extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, com.google.android.gms.location.LocationListener {
+        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener,LocationListener {
 
     private DatabaseReference databaseReference;
     private boolean setFocusToCurrentLocation = false;
@@ -94,6 +115,29 @@ public class NavDrawerMain extends AppCompatActivity
     File file;
     private ArrayList<Friend> friendsList;
     private DatabaseReference friendsReference,dbRefUsersLocation;
+    private static final String TAG = MainActivity.class.getSimpleName();
+
+
+    private GeofencingClient mGeofencingClient;
+    private PendingIntent mGeofencePendingIntent;
+    private ArrayList<Geofence> mGeofenceList;
+    private static final float GEOFENCE_RADIUS = 1606; // 50 meters
+    private static final long GEOFENCE_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours
+
+    private GoogleApiClient googleApiClient;
+    private FusedLocationProviderClient lastLocation;
+    private LocationRequest locationRequest;
+    private LocationCallback mLocationCallback;
+    Location location;
+    // Defined in mili seconds.
+    // This number in extremely low, and should be used only for debug
+    /*private final int UPDATE_INTERVAL =  1000;
+    private final int FASTEST_INTERVAL = 900;
+    private static final long GEO_DURATION = 60 * 60 * 1000;
+    private static final String GEOFENCE_REQ_ID = "My Geofence";
+    private static final float GEOFENCE_RADIUS = 500.0f; // in meters
+    private PendingIntent geoFencePendingIntent;
+    private final int GEOFENCE_REQ_CODE = 0;*/
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -104,6 +148,7 @@ public class NavDrawerMain extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         myProblems = new ArrayList<Problem>();
+        mGeofenceList =  new ArrayList<Geofence>();
         mStorageRef = FirebaseStorage.getInstance().getReference();
         mStorageRefProblems = FirebaseStorage.getInstance().getReference();
         friendsReference = FirebaseDatabase.getInstance().getReference("friends");
@@ -112,6 +157,7 @@ public class NavDrawerMain extends AppCompatActivity
         userLocalStore = new UserLocalStore(this);
         userAvatarStore = new UserAvatarStore(this);
         firstLoad = true;
+        //mGeofencingClient = LocationServices.getGeofencingClient(this);
         findViewById(R.id.includeActivityProfile).setVisibility(View.INVISIBLE);
         findViewById(R.id.includeActivityEditProfile).setVisibility(View.INVISIBLE);
         findViewById(R.id.includeActivityAdministratorsList).setVisibility(View.INVISIBLE);
@@ -128,6 +174,7 @@ public class NavDrawerMain extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+        //createGoogleApi();
         Button btnNewProblem = findViewById(R.id.button2);
         btnNewProblem.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -174,7 +221,6 @@ public class NavDrawerMain extends AppCompatActivity
         imageSideMenu = (ImageView)profileImageOnSideMenu.findViewById(R.id.imageProfileImage);
         GetDataFirebaseProblems();
         friendsList = new ArrayList<Friend>();
-
 
         Menu menuNav = navigationView.getMenu();
         MenuItem editProfile = menuNav.findItem(R.id.nav_edit_profile);
@@ -236,7 +282,30 @@ public class NavDrawerMain extends AppCompatActivity
                 startActivity(profile);
             }
         });
+        /*mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult == null) {
+                    return;
+                }
+                for (Location location : locationResult.getLocations()) {
+                    // Update UI with location data
+                    // ...
+                }
+            };
+        };*/
+
+
     }
+
+
+   /* @Override
+    protected void onStop() {
+        super.onStop();
+
+        googleApiClient.disconnect();
+    }*/
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -434,6 +503,7 @@ public class NavDrawerMain extends AppCompatActivity
                 if(data.solved == 0) {
                     String key = dataSnapshot.getKey();
                     data.key = key;
+
                     myProblems.add(data);
                     addProblemMarkers();
                 }
@@ -471,6 +541,19 @@ public class NavDrawerMain extends AppCompatActivity
             String lat = problem.latitude;
             String lon = problem.longitude;
             LatLng loc = new LatLng(Double.parseDouble(lat),Double.parseDouble(lon));
+            /*mGeofenceList.add(new Geofence.Builder()
+                    // Set the request ID of the geofence. This is a string to identify this
+                    // geofence.
+                    .setRequestId(problem.key)
+                    .setExpirationDuration(GEOFENCE_TIMEOUT)
+                    .setCircularRegion(
+                            loc.latitude,
+                            loc.longitude,
+                            GEOFENCE_RADIUS
+                    )
+
+                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
+                    .build());*/
             MarkerOptions markerOptions = new MarkerOptions();
             markerOptions.position(loc);
             if(problem.bmp== null)
@@ -480,7 +563,36 @@ public class NavDrawerMain extends AppCompatActivity
             markerOptions.title(problem.problemName);
             Marker marker = mMap.addMarker(markerOptions);
             markerProblemIdMap.put(marker,i);
+
+            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return;
+            }
+
+
         }
+
+        /*mGeofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
+                .addOnSuccessListener(this, new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        // Geofences added
+                        // ...
+                    }
+                })
+                .addOnFailureListener(this, new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        // Failed to add geofences
+                        // ...
+                    }
+                });*/
         /*mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
@@ -604,8 +716,15 @@ public class NavDrawerMain extends AppCompatActivity
             UserLocationInfo lInfo = new UserLocationInfo(location.getLatitude(),location.getLongitude(),user.getUid());
             dbRefUsersLocation.child(user.getUid()).setValue(lInfo);
         }
+        location = location;
+        writeActualLocation(location);
 
     }
+
+    private void writeActualLocation(Location location) {
+
+    }
+
     private void setMarkerOnCurrentLocation(double currentLatitude, double currentLongitude){
         if (currentLatitude != 0 && currentLongitude != 0){
 
@@ -620,4 +739,132 @@ public class NavDrawerMain extends AppCompatActivity
             mMap.animateCamera(update);
         }
     }
+    /*private void createGoogleApi() {
+        Log.d(TAG, "createGoogleApi()");
+        if ( googleApiClient == null ) {
+            googleApiClient = new GoogleApiClient.Builder( this )
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener( this)
+                    .addApi( LocationServices.API )
+                    .build();
+        }
+    }*/
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        //getLastKnownLocation();
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
+
+    /*private void getLastKnownLocation() {
+        Log.d(TAG, "getLastKnownLocation()");
+        if ( checkPermission() ) {
+            lastLocation = LocationServices.getFusedLocationProviderClient(this);
+            lastLocation.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    if(location!=null) {
+                        writeLastLocation();
+                        startLocationUpdates();
+                    }
+                    else
+                        startLocationUpdates();
+                }
+            });
+        }
+    }
+*/
+    /*private void startLocationUpdates() {
+        Log.i(TAG, "startLocationUpdates()");
+        locationRequest = LocationRequest.create()
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .setInterval(UPDATE_INTERVAL)
+                .setFastestInterval(FASTEST_INTERVAL);
+
+        if ( checkPermission() )
+            lastLocation.requestLocationUpdates(locationRequest, mLocationCallback,null);
+    }
+
+    private void writeLastLocation() {
+        
+    }
+
+
+    private boolean checkPermission() {
+        Log.d(TAG, "checkPermission()");
+        // Ask for permission if it wasn't granted yet
+        return (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED );
+    }
+
+    private Geofence createGeofence( LatLng latLng, float radius ) {
+        Log.d(TAG, "createGeofence");
+        return new Geofence.Builder()
+                .setRequestId(GEOFENCE_REQ_ID)
+                .setCircularRegion( latLng.latitude, latLng.longitude, radius)
+                .setExpirationDuration( GEO_DURATION )
+                .setTransitionTypes( Geofence.GEOFENCE_TRANSITION_ENTER
+                        | Geofence.GEOFENCE_TRANSITION_EXIT )
+                .build();
+    }
+    private GeofencingRequest createGeofenceRequest( Geofence geofence ) {
+        Log.d(TAG, "createGeofenceRequest");
+        return new GeofencingRequest.Builder()
+                .setInitialTrigger( GeofencingRequest.INITIAL_TRIGGER_ENTER )
+                .addGeofence( geofence )
+                .build();
+    }
+    private PendingIntent createGeofencePendingIntent() {
+        Log.d(TAG, "createGeofencePendingIntent");
+        if ( geoFencePendingIntent != null )
+            return geoFencePendingIntent;
+
+        Intent intent = new Intent( this, GeofenceTrasitionService.class);
+        return PendingIntent.getService(
+                this, GEOFENCE_REQ_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT );
+    }
+
+    // Add the created GeofenceRequest to the device's monitoring list
+    private void addGeofence(GeofencingRequest request) {
+        Log.d(TAG, "addGeofence");
+        if (checkPermission())
+            LocationServices.GeofencingApi.addGeofences(
+                    googleApiClient,
+                    request,
+                    createGeofencePendingIntent()
+            ).setResultCallback((ResultCallback<? super Status>) this);
+    }*/
+
+
+    /*private GeofencingRequest getGeofencingRequest() {
+        GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
+        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
+        builder.addGeofences(mGeofenceList);
+        return builder.build();
+    }
+
+    private PendingIntent getGeofencePendingIntent() {
+        // Reuse the PendingIntent if we already have it.
+        if (mGeofencePendingIntent != null) {
+            return mGeofencePendingIntent;
+        }
+        Intent intent = new Intent(this, GeofenceTransitionsIntentService.class);
+        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
+        // calling addGeofences() and removeGeofences().
+        mGeofencePendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.
+                FLAG_UPDATE_CURRENT);
+        return mGeofencePendingIntent;
+    }
+    private Circle geoFenceLimits;*/
+
+
 }

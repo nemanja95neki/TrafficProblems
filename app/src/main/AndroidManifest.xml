@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.elfak.nv.trafficproblems">
+    package="com.elfak.nv.trafficproblems"
+   >
 
     <!--
          The ACCESS_COARSE/FINE_LOCATION permissions are not required to use
@@ -34,6 +35,7 @@
         android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         android:hardwareAccelerated="false"
         android:largeHeap="true">
+
         <provider
             android:name="android.support.v4.content.FileProvider"
             android:authorities="com.example.android.fileprovider"
@@ -147,6 +149,7 @@
             android:name=".DeviceListActivity"
             android:label="@string/title_activity_device_list"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"></activity>
+        <service android:enabled="true" android:name=".GeofenceTransitionsIntentService" />
     </application>
 
 </manifest>
