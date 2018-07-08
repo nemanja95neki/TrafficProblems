@@ -149,6 +149,16 @@ public class NavDrawerMain extends AppCompatActivity
         MenuItem editProfile = menuNav.findItem(R.id.nav_edit_profile);
         MenuItem logoutUser = menuNav.findItem(R.id.logout);
         MenuItem myProblems = menuNav.findItem(R.id.nav_problems);
+        MenuItem friends = menuNav.findItem(R.id.nav_friends);
+
+        friends.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                Intent intent = new Intent(NavDrawerMain.this, Friends.class);
+                startActivity(intent);
+                return true;
+            }
+        });
 
         myProblems.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override

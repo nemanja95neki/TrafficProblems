@@ -11,6 +11,7 @@ import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -22,6 +23,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -36,6 +38,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -64,9 +67,14 @@ public class Profile extends AppCompatActivity implements NavigationView.OnNavig
     private StorageReference mStorageRef;
     private ImageView imageView,imageSideMenu;
     private Bitmap avatar;
+    private Button posts,rank,friends;
     String user_id;
     User openedUser;
     int profileCase = -1;
+    DatabaseReference mRef,friendDbRef;
+    FirebaseDatabase mFirebaseDatabase,friendsDatabase;
+    private int numberOfPosts;
+    private int points;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,7 +82,10 @@ public class Profile extends AppCompatActivity implements NavigationView.OnNavig
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        numberOfPosts = 0;
         mStorageRef = FirebaseStorage.getInstance().getReference();
+        mFirebaseDatabase = FirebaseDatabase.getInstance();
+        friendsDatabase = FirebaseDatabase.getInstance();
         findViewById(R.id.includeMainView).setVisibility(View.INVISIBLE);
         findViewById(R.id.includeActivityEditProfile).setVisibility(View.INVISIBLE);
         findViewById(R.id.includeActivityAdministratorsList).setVisibility(View.INVISIBLE);
@@ -97,6 +108,9 @@ public class Profile extends AppCompatActivity implements NavigationView.OnNavig
         phone_number = (TextView)findViewById(R.id.phone_number);
         editButton = (ImageButton)findViewById(R.id.edit);
         imageView = (ImageView) findViewById(R.id.imageView);
+        posts = (Button) findViewById(R.id.posts);
+        rank = (Button) findViewById(R.id.rank);
+        friends = (Button) findViewById(R.id.friends);
 
         userLocalStore = new UserLocalStore(this);
         userInfo = userLocalStore.getLoggedInUser();
@@ -123,11 +137,13 @@ public class Profile extends AppCompatActivity implements NavigationView.OnNavig
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
             finish();
         }
+        GetDataFirebaseProblems();
         if(profileCase == 1) {
             name.setText("Name: " + userInfo.first_name);
             last_name.setText("Last name: " + userInfo.last_name);
             email.setText("Email: " + userInfo.email);
             phone_number.setText("Phone number: " + userInfo.phone_number);
+
 
             editButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -224,6 +240,94 @@ public class Profile extends AppCompatActivity implements NavigationView.OnNavig
         }catch (IOException e){
             e.printStackTrace();
         }*/
+    }
+    void GetDataFirebaseProblems()
+    {
+        mRef = mFirebaseDatabase.getReference("problems");
+        mRef.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                final Problem data = dataSnapshot.getValue(Problem.class);
+                if(profileCase == 1 && data.userId.equals(userInfo.key)) {
+                    numberOfPosts = numberOfPosts + 1;
+                    points = points + 1;
+                    if(data.solved == 1)
+                        points = points + data.priority;
+
+                    if(points<=20)
+                        rank.setText("Rank: Beginner");
+                    else if (points>20 && points<=40)
+                        rank.setText("Rank: Semi pro");
+                    else if (points>40 && points<=60)
+                        rank.setText("Rank: Pro");
+                    else if (points>60 && points<=80)
+                        rank.setText("Rank: Expert");
+                    else if (points>80 && points<=100)
+                        rank.setText("Rank: World class");
+
+                    posts.setText("Posts: " + numberOfPosts);
+                }
+                if(profileCase == 2 && data.userId.equals(user_id) && user_id != "") {
+                    numberOfPosts = numberOfPosts + 1;
+
+                    points = points + 1;
+                    if(data.solved == 1)
+                        points = points + data.priority;
+
+                    if(points<=20)
+                        rank.setText("Rank: Beginner");
+                    else if (points>20 && points<=40)
+                        rank.setText("Rank: Semi pro");
+                    else if (points>40 && points<=60)
+                        rank.setText("Rank: Pro");
+                    else if (points>60 && points<=80)
+                        rank.setText("Rank: Expert");
+                    else if (points>80)
+                        rank.setText("Rank: World class");
+
+                    posts.setText("Posts: " + numberOfPosts);
+                }
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+        friendDbRef = friendsDatabase.getReference("friends");
+        friendDbRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (profileCase == 1 && userInfo.key != "") {
+                    final Long numberOfFriends = dataSnapshot.child(userInfo.key).getChildrenCount();
+                    friends.setText("Friends: " + numberOfFriends);
+                }
+                if (profileCase == 2 && user_id != "") {
+                    final Long numberOfFriends = dataSnapshot.child(user_id).getChildrenCount();
+                    friends.setText("Friends: " + numberOfFriends);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                //Toast.makeText(ProfileActivity.this,"Something went wrong. Please try again...",Toast.LENGTH_SHORT).show();
+            }
+        });
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

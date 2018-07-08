@@ -32,4 +32,10 @@
     <string name="title_activity_problems_list">ProblemsList</string>
     <string name="title_for_problem_lists">Problem</string>
     <string name="title_activity_view_problem">ViewProblemActivity</string>
+    <string name="title_activity_friends">Friends</string>
+    <string name="title_activity_device_list">DeviceListActivity</string>
+    <string name="none_paired">No devices have been paired</string>
+    <string name="scanning">Scanning for devices...</string>
+    <string name="select_device">Select a Device to connect to:</string>
+    <string name="none_found">No devices found</string>
 </resources>

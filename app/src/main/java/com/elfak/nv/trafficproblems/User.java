@@ -29,6 +29,7 @@ public class User {
         this.phone_number = phone_number;
         this.role = "user";
     }
+
     public User(String key, String email,String password,String first_name,String last_name,String phone_number)
     {
         this.key = key;

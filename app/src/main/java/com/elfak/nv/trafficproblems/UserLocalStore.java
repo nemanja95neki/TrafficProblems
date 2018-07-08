@@ -20,6 +20,7 @@ public class UserLocalStore {
         userLocalDatabaseEditor.putString("email", user.email);
         userLocalDatabaseEditor.putString("phone_number", user.phone_number);
         userLocalDatabaseEditor.putString("password", user.password);
+        userLocalDatabaseEditor.putString("role", user.role);
         userLocalDatabaseEditor.commit();
     }
 
@@ -45,8 +46,10 @@ public class UserLocalStore {
         String email = userLocalDatabase.getString("email", "");
         String phone_number = userLocalDatabase.getString("phone_number", "");
         String password = userLocalDatabase.getString("password", "");
+        String role = userLocalDatabase.getString("role", "");
 
         User user = new User(key, email, password, name, last_name,phone_number);
+        user.role = role;
         return user;
     }
 }

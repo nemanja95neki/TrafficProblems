@@ -140,6 +140,7 @@ public class EditProfile extends AppCompatActivity implements NavigationView.OnN
                     return;
                 }
                 changedUser = new User(user.key,email,password,name,last_name,phone_number);
+                changedUser.role = user.role;
                 databaseReference = FirebaseDatabase.getInstance().getReference();
                 databaseReference.child("users").child(changedUser.key).setValue(changedUser);
 
