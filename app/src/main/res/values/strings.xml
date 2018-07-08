@@ -38,4 +38,5 @@
     <string name="scanning">Scanning for devices...</string>
     <string name="select_device">Select a Device to connect to:</string>
     <string name="none_found">No devices found</string>
+    <string name="title_activity_search">SearchActivity</string>
 </resources>

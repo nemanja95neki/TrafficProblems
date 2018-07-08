@@ -1,9 +1,12 @@
 package com.elfak.nv.trafficproblems;
 
 import android.graphics.Bitmap;
+import android.net.Uri;
 
 import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
+
+import java.net.PortUnreachableException;
 
 @IgnoreExtraProperties
 public class User {
@@ -17,6 +20,8 @@ public class User {
     public String key;
     @Exclude
     public String imageUri;
+    @Exclude
+    public Uri imagePicture;
 
     public User() {}
 
