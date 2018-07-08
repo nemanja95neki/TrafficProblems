@@ -9,6 +9,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
@@ -31,7 +32,9 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -66,9 +69,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class NavDrawerMain extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
+        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, com.google.android.gms.location.LocationListener {
 
     private DatabaseReference databaseReference;
+    private boolean setFocusToCurrentLocation = false;
     private FirebaseAuth firebaseAuth;
     private FirebaseUser user;
     private User userInfo;
@@ -85,8 +89,11 @@ public class NavDrawerMain extends AppCompatActivity
     FirebaseDatabase mFirebaseDatabase;
     DatabaseReference mRef;
     String uriPicture="";
+    private Marker myLocation;
     private ArrayList<Problem> myProblems;
     File file;
+    private ArrayList<Friend> friendsList;
+    private DatabaseReference friendsReference,dbRefUsersLocation;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -99,6 +106,8 @@ public class NavDrawerMain extends AppCompatActivity
         myProblems = new ArrayList<Problem>();
         mStorageRef = FirebaseStorage.getInstance().getReference();
         mStorageRefProblems = FirebaseStorage.getInstance().getReference();
+        friendsReference = FirebaseDatabase.getInstance().getReference("friends");
+        dbRefUsersLocation = FirebaseDatabase.getInstance().getReference("Current Location");
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         userLocalStore = new UserLocalStore(this);
         userAvatarStore = new UserAvatarStore(this);
@@ -164,6 +173,7 @@ public class NavDrawerMain extends AppCompatActivity
         sideMenuName = profileImageOnSideMenu.findViewById(R.id.textUserName);
         imageSideMenu = (ImageView)profileImageOnSideMenu.findViewById(R.id.imageProfileImage);
         GetDataFirebaseProblems();
+        friendsList = new ArrayList<Friend>();
 
 
         Menu menuNav = navigationView.getMenu();
@@ -273,8 +283,30 @@ public class NavDrawerMain extends AppCompatActivity
                 imageSideMenu.setImageBitmap(avatar);
             }
         }
+        GetAllFriends();
     }
+    /*private void SetFriendsMarkers() {
 
+        dbRefUsersLocation.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                RemoveUserAndFriendsMarkers();
+                Iterable<DataSnapshot> children = dataSnapshot.getChildren();
+                for (DataSnapshot child : children) {
+
+                    UserLocationInfo location = child.getValue(UserLocationInfo.class);
+                    LatLng latlng = new LatLng(location.latitude,location.longitude);
+                    boolean isFriend = friendsList.contains(location.id);
+                    if (!location.id.equals(user.getUid()))
+                        addMarker(latlng,location.id ,isFriend);
+                }
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }*/
     private void startNewProblemActivity()
     {
         Intent i = new Intent(NavDrawerMain.this,AddProblemActivity.class);
@@ -312,6 +344,28 @@ public class NavDrawerMain extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+    private void GetAllFriends(){
+        DatabaseReference ref = friendsReference.child(userID);
+        ref.addValueEventListener(new ValueEventListener() {
+
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Iterable<DataSnapshot> children = dataSnapshot.getChildren();
+                for (DataSnapshot child : children) {
+
+                    Friend f = child.getValue(Friend.class);
+                    if(f != null) {
+                        friendsList.add(f);
+                    }
+                }
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
@@ -340,6 +394,7 @@ public class NavDrawerMain extends AppCompatActivity
             mMap.setMyLocationEnabled(true);
             //addProblemMarkers();
         }
+        setFocusToCurrentLocation = false;
         // Add a marker in Sydney and move the camera
         /*LatLng sydney = new LatLng(-34, 151);
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
@@ -529,5 +584,40 @@ public class NavDrawerMain extends AppCompatActivity
         }
         Bitmap rotatedBmp = Bitmap.createBitmap(bitmap,0,0,bitmap.getWidth(),bitmap.getHeight(),matrix,true);
         imageSideMenu.setImageBitmap(rotatedBmp);
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+
+        if (location == null) {
+            Toast.makeText(this, "Cant get current location", Toast.LENGTH_LONG).show();
+        } else {
+
+            LatLng ll = new LatLng(location.getLatitude(), location.getLongitude());
+            myLocation.setPosition(ll);
+            //currentLocation = location;
+            if(!setFocusToCurrentLocation) {
+                setMarkerOnCurrentLocation(location.getLatitude(), location.getLongitude());
+                setFocusToCurrentLocation = true;
+            }
+
+            UserLocationInfo lInfo = new UserLocationInfo(location.getLatitude(),location.getLongitude(),user.getUid());
+            dbRefUsersLocation.child(user.getUid()).setValue(lInfo);
+        }
+
+    }
+    private void setMarkerOnCurrentLocation(double currentLatitude, double currentLongitude){
+        if (currentLatitude != 0 && currentLongitude != 0){
+
+            LatLng ll = new LatLng(currentLatitude, currentLongitude);
+
+            myLocation.setPosition(ll);
+            myLocation.setTitle("Your position");
+            myLocation.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker_position));
+            myLocation.setVisible(true);
+
+            CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 16);
+            mMap.animateCamera(update);
+        }
     }
 }
