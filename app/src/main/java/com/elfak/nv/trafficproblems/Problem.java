@@ -1,6 +1,7 @@
 package com.elfak.nv.trafficproblems;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.widget.ImageButton;
 
 import com.google.firebase.database.Exclude;
@@ -18,6 +19,8 @@ public class Problem {
     public String key;
     @Exclude
     public String imageUri;
+    @Exclude
+    public Bitmap bmp;
 
     public Problem(){}
 

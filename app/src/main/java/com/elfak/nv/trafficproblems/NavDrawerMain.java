@@ -8,9 +8,12 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.graphics.drawable.Drawable;
 import android.media.ExifInterface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -33,12 +36,15 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -47,11 +53,17 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 import org.w3c.dom.Text;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class NavDrawerMain extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
@@ -67,10 +79,14 @@ public class NavDrawerMain extends AppCompatActivity
     private GoogleMap mMap;
     static final int PREMISSION_ACESS_FINE_LOCATION = 1;
     private ImageView imageSideMenu;
-    private StorageReference mStorageRef;
+    private StorageReference mStorageRef,mStorageRefProblems;
     private boolean firstLoad = false;
     private Bitmap avatar;
-
+    FirebaseDatabase mFirebaseDatabase;
+    DatabaseReference mRef;
+    String uriPicture="";
+    private ArrayList<Problem> myProblems;
+    File file;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,7 +96,10 @@ public class NavDrawerMain extends AppCompatActivity
         mapFragment.getMapAsync(this);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        myProblems = new ArrayList<Problem>();
         mStorageRef = FirebaseStorage.getInstance().getReference();
+        mStorageRefProblems = FirebaseStorage.getInstance().getReference();
+        mFirebaseDatabase = FirebaseDatabase.getInstance();
         userLocalStore = new UserLocalStore(this);
         userAvatarStore = new UserAvatarStore(this);
         firstLoad = true;
@@ -144,6 +163,8 @@ public class NavDrawerMain extends AppCompatActivity
         sideMenuEmail = profileImageOnSideMenu.findViewById(R.id.textEmail);
         sideMenuName = profileImageOnSideMenu.findViewById(R.id.textUserName);
         imageSideMenu = (ImageView)profileImageOnSideMenu.findViewById(R.id.imageProfileImage);
+        GetDataFirebaseProblems();
+
 
         Menu menuNav = navigationView.getMenu();
         MenuItem editProfile = menuNav.findItem(R.id.nav_edit_profile);
@@ -315,8 +336,10 @@ public class NavDrawerMain extends AppCompatActivity
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PREMISSION_ACESS_FINE_LOCATION);
-        } else
+        } else {
             mMap.setMyLocationEnabled(true);
+            //addProblemMarkers();
+        }
         // Add a marker in Sydney and move the camera
         /*LatLng sydney = new LatLng(-34, 151);
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
@@ -337,6 +360,7 @@ public class NavDrawerMain extends AppCompatActivity
                         // to handle the case where the user grants the permission. See the documentation
                         // for ActivityCompat#requestPermissions for more details.
                         mMap.setMyLocationEnabled(true);
+                        //addProblemMarkers();
                         return;
                     }
 
@@ -344,6 +368,74 @@ public class NavDrawerMain extends AppCompatActivity
                 return;
             }
         }
+    }
+    void GetDataFirebaseProblems(){
+
+        mRef = mFirebaseDatabase.getReference("problems");
+        mRef.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                final Problem data = dataSnapshot.getValue(Problem.class);
+                if(data.solved == 0) {
+                    String key = dataSnapshot.getKey();
+                    data.key = key;
+                    myProblems.add(data);
+                    addProblemMarkers();
+                }
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+    private HashMap<Marker,Integer> markerProblemIdMap;
+    private void addProblemMarkers()
+    {
+        ArrayList<Problem> problems = myProblems;
+        markerProblemIdMap = new HashMap<Marker, Integer>((int)((double)problems.size()*1.2));
+        for(int i=0;i<problems.size();i++)
+        {
+            Problem problem = problems.get(i);
+            String lat = problem.latitude;
+            String lon = problem.longitude;
+            LatLng loc = new LatLng(Double.parseDouble(lat),Double.parseDouble(lon));
+            MarkerOptions markerOptions = new MarkerOptions();
+            markerOptions.position(loc);
+            if(problem.bmp== null)
+                markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.warning));
+            else
+                markerOptions.icon(BitmapDescriptorFactory.fromBitmap(problem.bmp));
+            markerOptions.title(problem.problemName);
+            Marker marker = mMap.addMarker(markerOptions);
+            markerProblemIdMap.put(marker,i);
+        }
+        /*mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                Intent intent = new Intent(MyPlaceMapsActivity.this,ViewMyPlaceActivity.class);
+                int i = markerPlaceIdMap.get(marker);
+                intent.putExtra("position",i);
+                startActivity(intent);
+                return true;
+            }
+        });*/
     }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
