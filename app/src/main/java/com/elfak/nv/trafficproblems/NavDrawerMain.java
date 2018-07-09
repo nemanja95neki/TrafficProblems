@@ -107,6 +107,7 @@ public class NavDrawerMain extends AppCompatActivity
     private ArrayList<Marker> friendsMarkers = new ArrayList<Marker>();
     private ArrayList<Marker> usersMarkers = new ArrayList<Marker>();
     private ArrayList<Marker> problemMarkers = new ArrayList<Marker>();
+    private ArrayList<Marker> markers = new ArrayList<Marker>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -259,6 +260,12 @@ public class NavDrawerMain extends AppCompatActivity
             }
         });
     }
+    private void removeAllMarkers(){
+        for(Marker marker : markers) {
+            marker.remove();
+        }
+        markers.clear();
+    }
     @Override
     protected void onStart() {
         super.onStart();
@@ -305,9 +312,9 @@ public class NavDrawerMain extends AppCompatActivity
                 imageSideMenu.setImageBitmap(avatar);
             }
         }
-        GetDataFirebaseProblems();
         GetAllFriends();
         GetAllUsers();
+        GetDataFirebaseProblems();
     }
     private void startNewProblemActivity()
     {

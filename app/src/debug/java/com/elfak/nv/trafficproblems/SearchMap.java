@@ -108,13 +108,13 @@ public class SearchMap extends FragmentActivity implements NavigationView.OnNavi
         else if (searchCase == 2)
         {
             String prior = bundle.getString("priority");
-            if(prior!=null)
+            if(!prior.equals(""))
                 priority = Integer.parseInt(prior);
             String nam =  bundle.getString("name");
-            if(nam.equals(""))
+            if(!nam.equals(""))
                 name = bundle.getString("name");
             String dat = bundle.getString("date");
-            if(dat.equals(""))
+            if(!dat.equals(""))
                 date = Long.parseLong(dat);
         }
         else if(searchCase==3)
@@ -174,17 +174,17 @@ public class SearchMap extends FragmentActivity implements NavigationView.OnNavi
                         myProblems.add(p);
                         LatLng latlng = new LatLng(Double.parseDouble(p.latitude), Double.parseDouble(p.longitude));
                         boolean okay = true;
-                        if(priority!=0 && p.priority!=priority && okay == true)
+                        if((priority!=0 && p.priority!=priority) || okay == false)
                         {
                             okay = false;
                         }
-                        if(name!=null && !name.equals(p.problemName) && okay == true)
+                        if((name!=null && !(p.problemName.contains(name))) || okay == false)
                         {
                             okay = false;
                         }
                         /*SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
                         String dateString = formatter.format(new Date(date*1000));*/
-                        if(date!=null) {
+                        if(date!=null && okay == true) {
                             Long longDate = Long.valueOf(p.time);
 
                             Calendar cal = Calendar.getInstance();
@@ -210,7 +210,7 @@ public class SearchMap extends FragmentActivity implements NavigationView.OnNavi
         });
     }
 
-    private void GetDataFirebaseProblem(String problemId) {
+    private void GetDataFirebaseProblem(final String problemId) {
         DatabaseReference mRef = mFirebaseDatabase;
         mRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -225,32 +225,9 @@ public class SearchMap extends FragmentActivity implements NavigationView.OnNavi
                         p.imagePicture = gpi.getImage(p);
                         myProblems.add(p);
                         LatLng latlng = new LatLng(Double.parseDouble(p.latitude), Double.parseDouble(p.longitude));
-                        boolean okay = true;
-                        if(priority!=0 && p.priority!=priority && okay == true)
-                        {
-                            okay = false;
-                        }
-                        if(name!=null && !name.equals(p.problemName) && okay == true)
-                        {
-                            okay = false;
-                        }
-                        /*SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
-                        String dateString = formatter.format(new Date(date*1000));*/
-                        if(date!=null) {
-                            Long longDate = Long.valueOf(p.time);
-
-                            Calendar cal = Calendar.getInstance();
-                            int offset = cal.getTimeZone().getOffset(cal.getTimeInMillis());
-                            Date da = new Date();
-                            da = new Date(longDate - (long) offset);
-                            cal.setTime(da);
-                            String time = cal.getTime().toLocaleString();
-                            time = DateFormat.getDateInstance(DateFormat.MEDIUM).format(da);
-                            if(!time.equals(date))
-                                okay = false;
-                        }
-                        if(okay == true)
+                        if(p.key.equals(problemId))
                             addMarkerProblem(latlng, p.key);
+
                     }
                 }
             }
@@ -401,6 +378,8 @@ public class SearchMap extends FragmentActivity implements NavigationView.OnNavi
                 GetDataFirebaseProblems(radius);
             if(searchCase==2)
                 GetDataFirebaseProblems(priority, name, date);
+            if (searchCase==3)
+                GetDataFirebaseProblem(problem_id);
             myLocation = mMap.addMarker(new MarkerOptions().position(new LatLng(0,0)).visible(false));
             mMap.setMyLocationEnabled(true);
             //addProblemMarkers();
