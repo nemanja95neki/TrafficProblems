@@ -68,13 +68,29 @@ public class SearchActivity extends AppCompatActivity {
         searching.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                String priority = enter_priority.getText().toString();
+                String name = enter_problem_name.getText().toString();
+                String date = enter_problem_date.getText().toString();
+                Bundle idBundle = new Bundle();
+                idBundle.putInt("case", 2);
+                idBundle.putString("priority",priority);
+                idBundle.putString("name",name);
+                idBundle.putString("date",date);
+                Intent profile = new Intent(SearchActivity.this,SearchMap.class);
+                profile.putExtras(idBundle);
+                startActivity(profile);
             }
         });
         searching2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                String radius = enter_radius.getText().toString();
+                Bundle idBundle = new Bundle();
+                idBundle.putInt("case", 1);
+                idBundle.putString("radius",radius);
+                Intent profile = new Intent(SearchActivity.this,SearchMap.class);
+                profile.putExtras(idBundle);
+                startActivity(profile);
             }
         });
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);

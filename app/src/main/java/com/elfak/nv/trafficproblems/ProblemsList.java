@@ -1,7 +1,10 @@
 package com.elfak.nv.trafficproblems;
 
+import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -9,6 +12,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -31,6 +35,14 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingClient;
+import com.google.android.gms.location.GeofencingRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.places.Places;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -46,14 +58,15 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ProblemsList extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class ProblemsList extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener {
     RecyclerView mRecyclerView;
     FirebaseDatabase mFirebaseDatabase;
     DatabaseReference mRef;
     ProblemsList.MyAdapter adapter;
     List<Problem> listData;
     private StorageReference mStorageRef;
-    String uriPicture="";
+    String uriPicture = "";
     private UserLocalStore userLocalStore;
     private UserAvatarStore userAvatarStore;
     private Bitmap avatar;
@@ -61,6 +74,8 @@ public class ProblemsList extends AppCompatActivity implements NavigationView.On
     private TextView sideMenuEmail, sideMenuName;
     private ImageView imageSideMenu;
     private int problemsCase = 0;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,12 +83,11 @@ public class ProblemsList extends AppCompatActivity implements NavigationView.On
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        try{
+        try {
             Intent listIntent = getIntent();
             Bundle bundle = listIntent.getExtras();
             problemsCase = bundle.getInt("case");
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
             finish();
         }
@@ -104,12 +118,12 @@ public class ProblemsList extends AppCompatActivity implements NavigationView.On
         avatar = userAvatarStore.getUserAvatar();
 
         View header = navigationView.getHeaderView(0);
-        LinearLayout profileImageOnSideMenu = (LinearLayout)header.findViewById(R.id.viewProfile);
+        LinearLayout profileImageOnSideMenu = (LinearLayout) header.findViewById(R.id.viewProfile);
         sideMenuEmail = profileImageOnSideMenu.findViewById(R.id.textEmail);
         sideMenuName = profileImageOnSideMenu.findViewById(R.id.textUserName);
         sideMenuEmail.setText(userInfo.email);
         sideMenuName.setText(userInfo.first_name + " " + userInfo.last_name);
-        imageSideMenu = (ImageView)profileImageOnSideMenu.findViewById(R.id.imageProfileImage);
+        imageSideMenu = (ImageView) profileImageOnSideMenu.findViewById(R.id.imageProfileImage);
 
         mRecyclerView = findViewById(R.id.recyclerViewProblems);
         mRecyclerView.setHasFixedSize(true);
@@ -119,9 +133,9 @@ public class ProblemsList extends AppCompatActivity implements NavigationView.On
         mRecyclerView.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
 
         listData = new ArrayList<>();
-        adapter =  new MyAdapter(listData);
+        adapter = new MyAdapter(listData);
         mFirebaseDatabase = FirebaseDatabase.getInstance();
-        if(problemsCase==1)
+        if (problemsCase == 1)
             GetDataFirebaseProblems();
         else if (problemsCase == 2)
             GetDataFirebaseSolvedProblems();
@@ -133,7 +147,7 @@ public class ProblemsList extends AppCompatActivity implements NavigationView.On
         MenuItem logoutUser = menuNav.findItem(R.id.logout);
         MenuItem myProblems = menuNav.findItem(R.id.nav_problems);
 
-        if(problemsCase == 1 || problemsCase == 2) {
+        if (problemsCase == 1 || problemsCase == 2) {
             myProblems.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {
@@ -154,7 +168,7 @@ public class ProblemsList extends AppCompatActivity implements NavigationView.On
                 userLocalStore.clearUserData();
                 userAvatarStore.clearUserData();
                 FirebaseAuth.getInstance().signOut();
-                Intent login = new Intent(ProblemsList.this,LoginActivity.class);
+                Intent login = new Intent(ProblemsList.this, LoginActivity.class);
                 startActivity(login);
                 return true;
             }
@@ -164,7 +178,7 @@ public class ProblemsList extends AppCompatActivity implements NavigationView.On
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 Intent editProfile = new Intent(ProblemsList.this, EditProfile.class);
-                startActivityForResult(editProfile,1);
+                startActivityForResult(editProfile, 1);
                 return true;
             }
         });
@@ -173,12 +187,17 @@ public class ProblemsList extends AppCompatActivity implements NavigationView.On
             public void onClick(View v) {
                 Bundle idBundle = new Bundle();
                 idBundle.putInt("case", 1);
-                Intent profile = new Intent(ProblemsList.this,Profile.class);
+                Intent profile = new Intent(ProblemsList.this, Profile.class);
                 profile.putExtras(idBundle);
                 startActivity(profile);
             }
         });
+
+
+
     }
+
+
 
     void GetDataFirebaseProblems()
     {
@@ -200,6 +219,9 @@ public class ProblemsList extends AppCompatActivity implements NavigationView.On
                             data.imageUri = uriPicture;
                             listData.add(data);
                             mRecyclerView.setAdapter(adapter);
+
+
+
                         }
                     }).addOnFailureListener(new OnFailureListener() {
                         @Override
@@ -231,6 +253,7 @@ public class ProblemsList extends AppCompatActivity implements NavigationView.On
             }
         });
     }
+
     void GetDataFirebaseSolvedProblems()
     {
         mRef = mFirebaseDatabase.getReference("problems");
@@ -353,6 +376,21 @@ public class ProblemsList extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
+
     public class MyAdapter extends RecyclerView.Adapter<ProblemsList.MyAdapter.MyViewHolder>
     {
         List<Problem> listArray;
@@ -448,4 +486,7 @@ public class ProblemsList extends AppCompatActivity implements NavigationView.On
             imageSideMenu.setImageBitmap(avatar);
         }
     }
+
+
+
 }

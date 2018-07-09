@@ -92,9 +92,9 @@ public class NavDrawerMain extends AppCompatActivity
     static final int PREMISSION_ACESS_FINE_LOCATION = 1;
     private ImageView imageSideMenu;
     private StorageReference mStorageRef,mStorageRefProblems;
-    private ImageButton searching_button;
     private boolean firstLoad = false;
     private Bitmap avatar;
+    private ImageButton searching_button;
     DatabaseReference mFirebaseDatabase;
     DatabaseReference dbFirebase;
     String uriPicture="";
@@ -149,7 +149,6 @@ public class NavDrawerMain extends AppCompatActivity
                 startNewProblemActivity();
             }
         });
-
         searching_button = findViewById(R.id.searching_button);
         searching_button.setOnClickListener(new View.OnClickListener() {
             @Override
