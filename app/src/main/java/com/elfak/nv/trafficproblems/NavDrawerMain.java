@@ -2,6 +2,7 @@ package com.elfak.nv.trafficproblems;
 
 import android.Manifest;
 import android.app.LauncherActivity;
+import android.app.PendingIntent;
 import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -37,6 +38,8 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdate;
@@ -107,6 +110,19 @@ public class NavDrawerMain extends AppCompatActivity
     private ArrayList<Marker> friendsMarkers = new ArrayList<Marker>();
     private ArrayList<Marker> usersMarkers = new ArrayList<Marker>();
     private ArrayList<Marker> problemMarkers = new ArrayList<Marker>();
+    private GeofencingClient mGeofencingClient;
+    private PendingIntent mGeofencePendingIntent;
+   private ArrayList<Geofence> mGeofenceList;
+   private static final float GEOFENCE_RADIUS = 1606; // 50 meters
+   private static final long GEOFENCE_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours
+
+   /*private final int UPDATE_INTERVAL =  1000;
++    private final int FASTEST_INTERVAL = 900;
++    private static final long GEO_DURATION = 60 * 60 * 1000;
++    private static final String GEOFENCE_REQ_ID = "My Geofence";
++    private static final float GEOFENCE_RADIUS = 500.0f; // in meters
++    private PendingIntent geoFencePendingIntent;
++    private final int GEOFENCE_REQ_CODE = 0;*/
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -578,8 +594,36 @@ public class NavDrawerMain extends AppCompatActivity
                         p.imagePicture = gpi.getImage(p);
                         myProblems.add(p);
                         LatLng latlng = new LatLng(Double.parseDouble(p.latitude),Double.parseDouble(p.longitude));
+                        /*mGeofenceList.add(new Geofence.Builder()
+                   // Set the request ID of the geofence. This is a string to identify this
+                    // geofence.
+                    .setRequestId(problem.key)
+                    .setExpirationDuration(GEOFENCE_TIMEOUT)
+                    .setCircularRegion(
+                            loc.latitude,
+                            loc.longitude,
+                            GEOFENCE_RADIUS
+                    )
+
+                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
+                    .build());*/
                         addMarkerProblem(latlng,p.key);
                     }
+                    /*mGeofencingClient.addGeofences(getGeofencingRequest(), getGeofencePendingIntent())
+                .addOnSuccessListener(this, new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        // Geofences added
+                        // ...
+                    }
+                })
+                .addOnFailureListener(this, new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        // Failed to add geofences
+                        // ...
+                    }
+                });*/
                 }
             }
             @Override
@@ -601,6 +645,7 @@ public class NavDrawerMain extends AppCompatActivity
             LatLng loc = new LatLng(Double.parseDouble(lat),Double.parseDouble(lon));
             MarkerOptions markerOptions = new MarkerOptions();
             markerOptions.position(loc);
+
             if(problem.bmp== null)
                 markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.warning));
             else
@@ -861,4 +906,25 @@ public class NavDrawerMain extends AppCompatActivity
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
     }
+
+     /*private GeofencingRequest getGeofencingRequest() {
++        GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
++        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
++        builder.addGeofences(mGeofenceList);
++        return builder.build();
++    }
++
++    private PendingIntent getGeofencePendingIntent() {
++        // Reuse the PendingIntent if we already have it.
++        if (mGeofencePendingIntent != null) {
++            return mGeofencePendingIntent;
++        }
++        Intent intent = new Intent(this, GeofenceTransitionsIntentService.class);
++        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
++        // calling addGeofences() and removeGeofences().
++        mGeofencePendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.
++                FLAG_UPDATE_CURRENT);
++        return mGeofencePendingIntent;
++    }
++    private Circle geoFenceLimits;*/
 }
