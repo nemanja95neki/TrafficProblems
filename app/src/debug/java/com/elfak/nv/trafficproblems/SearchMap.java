@@ -80,6 +80,7 @@ public class SearchMap extends FragmentActivity implements NavigationView.OnNavi
     private DatabaseReference friendsReference, dbRefUsersLocation;
     double Latitude;
     double Longitude;
+    private String problem_id;
     private FusedLocationProviderClient mFusedLocationClient;
     LocationManager locationManager;
 
@@ -115,6 +116,15 @@ public class SearchMap extends FragmentActivity implements NavigationView.OnNavi
             String dat = bundle.getString("date");
             if(dat.equals(""))
                 date = Long.parseLong(dat);
+        }
+        else if(searchCase==3)
+        {
+            problem_id=bundle.getString("problem_id");
+            if(problem_id!=null)
+            {
+
+            }
+
         }
 
 
@@ -199,6 +209,59 @@ public class SearchMap extends FragmentActivity implements NavigationView.OnNavi
             }
         });
     }
+
+    private void GetDataFirebaseProblem(String problemId) {
+        DatabaseReference mRef = mFirebaseDatabase;
+        mRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Iterable<DataSnapshot> children = dataSnapshot.getChildren();
+                for (DataSnapshot child : children) {
+
+                    final Problem p = child.getValue(Problem.class);
+                    p.key = child.getKey();
+                    if (p != null) {
+                        GetProblemImage gpi = new GetProblemImage();
+                        p.imagePicture = gpi.getImage(p);
+                        myProblems.add(p);
+                        LatLng latlng = new LatLng(Double.parseDouble(p.latitude), Double.parseDouble(p.longitude));
+                        boolean okay = true;
+                        if(priority!=0 && p.priority!=priority && okay == true)
+                        {
+                            okay = false;
+                        }
+                        if(name!=null && !name.equals(p.problemName) && okay == true)
+                        {
+                            okay = false;
+                        }
+                        /*SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+                        String dateString = formatter.format(new Date(date*1000));*/
+                        if(date!=null) {
+                            Long longDate = Long.valueOf(p.time);
+
+                            Calendar cal = Calendar.getInstance();
+                            int offset = cal.getTimeZone().getOffset(cal.getTimeInMillis());
+                            Date da = new Date();
+                            da = new Date(longDate - (long) offset);
+                            cal.setTime(da);
+                            String time = cal.getTime().toLocaleString();
+                            time = DateFormat.getDateInstance(DateFormat.MEDIUM).format(da);
+                            if(!time.equals(date))
+                                okay = false;
+                        }
+                        if(okay == true)
+                            addMarkerProblem(latlng, p.key);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
     public static String toYYYYMMDDHHMMSS(long time) {
         SimpleDateFormat format = new SimpleDateFormat("M??d??H?m??s??");
         return format.format(new Date(time));

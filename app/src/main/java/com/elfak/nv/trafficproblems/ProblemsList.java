@@ -456,7 +456,8 @@ public class ProblemsList extends AppCompatActivity implements NavigationView.On
                     String problem_id = saving_problem_id.getText().toString();
                     Bundle idBundle = new Bundle();
                     idBundle.putString("problem_id", problem_id);
-                    Intent intent = new Intent(ProblemsList.this, Profile.class);
+                    idBundle.putInt("case",3);
+                    Intent intent = new Intent(ProblemsList.this, SearchMap.class);
                     intent.putExtras(idBundle);
                     startActivity(intent);
 
